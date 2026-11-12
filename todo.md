@@ -18,7 +18,7 @@ Application de gestion de dépenses. L'idée c'est de pouvoir noter les dépense
 
 ## Taches
 
-- [] Se connecter aux répos bubo_spents et bubo_server
+- [x] Se connecter aux répos bubo_spents et bubo_server
 - [] créer les projets ionic et laravel dans les projets respectifs
 - [] Connecter l'application au serveur
 - [] developper et pusher l'application pas à pas
