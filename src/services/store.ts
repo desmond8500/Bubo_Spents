@@ -46,6 +46,30 @@ export async function add(key: EntityKey, data: Record<string, any>) {
   await persist(key)
 }
 
+/** Lignes affichées : les suppressions en attente de synchro sont masquées. */
+export const visible = (key: EntityKey) => state[key].filter((r) => !r.deleted)
+
+export async function update(key: EntityKey, uuid: string, data: Record<string, any>) {
+  const row = state[key].find((r) => r.uuid === uuid)
+  if (!row) return
+  Object.assign(row, data, { synced: false, updated_at: new Date().toISOString() })
+  await persist(key)
+}
+
+/** Supprime localement. Une ligne déjà connue du serveur est gardée comme "tombstone" jusqu'à la synchro. */
+export async function remove(key: EntityKey, uuid: string) {
+  const row = state[key].find((r) => r.uuid === uuid)
+  if (!row) return
+  if (row.server) {
+    row.deleted = true
+    row.synced = false
+    row.updated_at = new Date().toISOString()
+  } else {
+    state[key] = state[key].filter((r) => r.uuid !== uuid)
+  }
+  await persist(key)
+}
+
 export const pendingCount = () =>
   entities.reduce((n, e) => n + state[e.key].filter((r) => !r.synced).length, 0)
 
@@ -59,11 +83,11 @@ export async function sync() {
     for (const e of entities) {
       payload[e.key] = state[e.key]
         .filter((r) => !r.synced)
-        .map(({ synced, ...row }) => row)
+        .map(({ synced, server, ...row }) => row)
     }
     const { data } = await api.post('/sync', payload)
     for (const e of entities) {
-      state[e.key] = (data[e.key] as Row[]).map((r) => ({ ...r, synced: true }))
+      state[e.key] = (data[e.key] as Row[]).map((r) => ({ ...r, synced: true, server: true }))
       await persist(e.key)
     }
     state.lastSync = new Date().toISOString()
