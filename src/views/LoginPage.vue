@@ -3,7 +3,7 @@
     <ion-content class="ion-padding">
       <div class="wrap">
         <div class="brand">
-          <div class="logo"><ion-icon :icon="walletOutline" /></div>
+          <img class="logo" src="/logo.svg" alt="Bubo Spents" />
           <h1>Bubo Spents</h1>
           <p>Vos dépenses, sous contrôle.</p>
         </div>
@@ -66,8 +66,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { IonPage, IonContent, IonSegment, IonSegmentButton, IonLabel, IonItem, IonInput, IonButton, IonNote, IonIcon } from '@ionic/vue'
-import { walletOutline } from 'ionicons/icons'
+import { IonPage, IonContent, IonSegment, IonSegmentButton, IonLabel, IonItem, IonInput, IonButton, IonNote } from '@ionic/vue'
 import { errorMessage, login, register } from '../services/auth'
 import { DEFAULT_API_URL, settings } from '../services/settings'
 import { sync } from '../services/store'
@@ -115,15 +114,11 @@ async function submit() {
   margin-bottom: 28px;
 }
 .logo {
-  width: 72px;
-  height: 72px;
+  display: block;
+  width: 96px;
+  height: 96px;
   margin: 0 auto 12px;
-  display: grid;
-  place-items: center;
-  border-radius: 22px;
-  font-size: 36px;
-  color: var(--ion-color-secondary);
-  background: linear-gradient(135deg, #4a48b5 0%, #27256f 100%);
+  border-radius: 26px;
   box-shadow: 0 10px 24px rgba(39, 37, 111, 0.3);
 }
 .brand h1 {

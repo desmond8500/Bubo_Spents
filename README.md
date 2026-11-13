@@ -37,6 +37,20 @@ L'APK est écrit dans `android/app/build/outputs/apk/debug/app-debug.apk` (le do
 localement et ignoré par git). Autres scripts : `npm run build` (vérification des types + build web),
 `npm run build:web` (build web seul), `npm run typecheck`.
 
+## Logo, icône et splash screen
+
+Le logo (hibou indigo et ambre, une pièce sur le ventre) est dans `public/logo.svg` (web, écran de connexion,
+favicon). L'icône et les écrans de démarrage sont dans `assets/` :
+
+| Fichier | Rôle |
+| --- | --- |
+| `icon-only.png` | icône plein cadre (1024 px) |
+| `icon-foreground.png`, `icon-background.png` | icône adaptative Android (le hibou reste dans la zone sûre) |
+| `splash.png`, `splash-dark.png` | écran de démarrage clair et sombre (2732 px) |
+
+`npm run apk` les convertit automatiquement aux tailles Android (`npm run assets` pour le faire seul).
+Les sources vectorielles sont dans `assets/svg/`.
+
 ## Synchronisation
 
 Chaque ligne créée hors ligne reçoit un `uuid` et `synced: false`. Le bouton de synchronisation envoie

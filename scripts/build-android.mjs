@@ -40,10 +40,12 @@ function preflight() {
 
 if (!openStudio) preflight()
 
-if (!existsSync('node_modules/@capacitor/android')) step('npm install')
+if (!existsSync('node_modules/@capacitor/android') || !existsSync('node_modules/@capacitor/assets')) step('npm install')
 
 step('npm run build:web')
 if (!existsSync('android')) step('npx cap add android')
+// Icône et splash screen générés depuis assets/ (logo hibou) dans le projet Android.
+if (existsSync('assets/icon-only.png')) step('npx capacitor-assets generate --android')
 step('npx cap sync android')
 
 if (openStudio) {
