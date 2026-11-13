@@ -27,14 +27,23 @@ Application de gestion de dépenses. L'idée c'est de pouvoir noter les dépense
   - description
 - depenses
   - article_id
+  - user_id
+  - quantite
+  - montant
+  - Date
+- depenses_personelles
+  - user_id
+  - designation
   - quantite
   - montant
   - Date
 - Revenus
+  - user_id
   - description
   - montant
   - date
 - Emprunts
+  - user_id
   - description
   - montant
   - date
@@ -57,3 +66,8 @@ Application de gestion de dépenses. L'idée c'est de pouvoir noter les dépense
 - [] améliorer l'interface
 - [] créer un logo
 - [] splash screen
+
+## user
+
+- [] Chaque utilisateur ne doit voir que ses emprunts
+- [] Chaque utilisateur ne doit voir que ses revenus
