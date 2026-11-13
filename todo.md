@@ -70,32 +70,32 @@ L'un des utilisateur doit pouvoir définir un solde de départ qui fera office d
 
 ## Fonctionalités
 
-- [] PWA
-- [] Ajouter une table budget
-  - [] il pourra etre crédité au fur et à mesure par un utilisateur
-  - [] il sera visible par tous les utilisateurs
-  - [] le solde de chaque mois sera reporté sur le budget du mois suivant
-- [] Ajouter le mode de paiement aux depenes, revenus, emprunts,
+- [x] PWA
+- [x] Ajouter une table budget
+  - [x] il pourra etre crédité au fur et à mesure par un utilisateur
+  - [x] il sera visible par tous les utilisateurs
+  - [x] le solde de chaque mois sera reporté sur le budget du mois suivant
+- [x] Ajouter le mode de paiement aux depenes, revenus, emprunts,
   - orange money
   - wave
   - espèce
   - transfert bancaire
   - chèque
-- [] Formulaire de recherche pour :
+- [x] Formulaire de recherche pour :
   - les fournisseurs
   - les marques
   - les articles
-- [] Synchronisation automtique toutes les 8h
-- [] Pouvoir ajouter un nouvel article à partir de la page d'ajout d'une nouvelle dépense
-- [] bouton pour dupliquer un article
+- [x] Synchronisation automtique toutes les 8h
+- [x] Pouvoir ajouter un nouvel article à partir de la page d'ajout d'une nouvelle dépense
+- [x] bouton pour dupliquer un article
 
 ## Prets
 
-- [] gérer le rembousement de pret
+- [x] gérer le rembousement de pret
 
 ## Importation
 
-- [] Gérer l'importation 
+- [x] Gérer l'importation 
   - des marques
   - des articles
   - des fournisseurs

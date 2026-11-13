@@ -1,4 +1,5 @@
 import { createApp } from 'vue'
+import { Capacitor } from '@capacitor/core'
 import { IonicVue } from '@ionic/vue'
 import App from './App.vue'
 import router from './router'
@@ -21,3 +22,12 @@ Promise.all([router.isReady(), loadSettings(), init()]).then(() => {
   app.mount('#app')
   startAutoSync()
 })
+
+// PWA : service worker pour l'ouverture hors ligne (version web uniquement, pas dans l'application Android).
+if (import.meta.env.PROD && !Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // sans service worker, l'application fonctionne normalement mais ne s'ouvre pas hors ligne
+    })
+  })
+}

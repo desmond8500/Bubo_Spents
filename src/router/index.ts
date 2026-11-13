@@ -14,6 +14,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/', redirect: '/tabs/resume' },
   { path: '/login', component: () => import('../views/LoginPage.vue'), meta: { public: true } },
   { path: '/settings', component: () => import('../views/SettingsPage.vue') },
+  { path: '/settings/import', component: () => import('../views/ImportPage.vue') },
   { path: '/settings/users', component: () => import('../views/UsersPage.vue'), meta: { admin: true } },
   { path: '/settings/journal', component: () => import('../views/JournalPage.vue'), meta: { admin: true } },
   {

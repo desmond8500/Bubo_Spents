@@ -137,7 +137,7 @@ const query = ref('')
 const normalize = (s: string) =>
   s
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
 
 const searchText = (row: Row) =>

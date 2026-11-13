@@ -97,6 +97,10 @@
 
       <ion-list inset>
         <ion-list-header><ion-label>Données</ion-label></ion-list-header>
+        <ion-item v-if="canCreate('articles')" button router-link="/settings/import" detail>
+          <ion-icon slot="start" :icon="cloudUploadOutline" />
+          <ion-label>Importer des articles, marques, fournisseurs</ion-label>
+        </ion-item>
         <ion-item button :detail="false" @click="confirmClear">
           <ion-icon slot="start" :icon="trashOutline" color="danger" />
           <ion-label color="danger">Effacer les données locales</ion-label>
@@ -112,12 +116,12 @@ import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton, IonContent, IonList,
   IonListHeader, IonItem, IonLabel, IonInput, IonIcon, IonNote, IonToggle, alertController, toastController,
 } from '@ionic/vue'
-import { listOutline, logOutOutline, peopleOutline, syncOutline, trashOutline, wifiOutline } from 'ionicons/icons'
+import { cloudUploadOutline, listOutline, logOutOutline, peopleOutline, syncOutline, trashOutline, wifiOutline } from 'ionicons/icons'
 import { useRouter } from 'vue-router'
 import { api } from '../services/api'
 import { logout } from '../services/auth'
 import { roleLabel, session } from '../services/session'
-import { isAdmin } from '../services/permissions'
+import { canCreate, isAdmin } from '../services/permissions'
 import { DEFAULT_API_URL, settings } from '../services/settings'
 import { clearLocal, pendingCount, state, sync } from '../services/store'
 

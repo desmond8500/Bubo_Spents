@@ -57,3 +57,24 @@ Chaque ligne créée hors ligne reçoit un `uuid` et `synced: false`. Le bouton 
 les lignes en attente à `POST /api/sync`, puis remplace les données locales par celles du serveur.
 
 Voir [todo.md](todo.md) pour l'avancement.
+
+Une synchronisation automatique part toutes les 8 h tant que l'application est ouverte (désactivable dans Paramètres). Application fermée, elle ne peut pas tourner : le rattrapage se fait à l'ouverture suivante.
+
+## Budget
+
+Le budget est commun. N'importe qui peut le créditer (Résumé > Budget). Solde du mois = report du mois précédent + crédits − dépenses **générales** de tous les utilisateurs. Les dépenses personnelles n'y entrent pas.
+
+## Application web (PWA)
+
+`npm run build` produit une PWA installable (manifest, icônes, service worker `public/sw.js`). Le service worker n'est enregistré que sur le web, jamais dans l'application Android. Les appels à l'API ne sont jamais mis en cache.
+
+## Importer des données (CSV)
+
+Paramètres > Importer. Fichier CSV avec ligne d'en-tête, séparateur `;`, `,` ou tabulation, UTF-8 ou Windows-1252 ; 2 Mo et 2000 lignes maximum.
+
+| Type | Colonnes |
+| --- | --- |
+| Marques, fournisseurs | `nom`, `description`, `logo` (adresse http/https) |
+| Articles | `nom`, `prix`, `description`, `marque`, `fournisseur`, `images` (adresses http/https séparées par `\|`, 5 maximum) |
+
+Les lignes déjà présentes (même nom, ou même nom + marque + fournisseur pour un article) sont ignorées : réimporter un fichier ne crée pas de doublons. Les marques et fournisseurs inconnus cités par des articles sont créés. Les lignes invalides sont refusées avec leur numéro de ligne. L'export correspondant est fourni par l'API serveur (`/api/export/{marques|fournisseurs|articles}?format=csv|json`).

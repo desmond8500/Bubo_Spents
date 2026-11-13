@@ -53,22 +53,31 @@ const newUuid = () =>
         return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16)
       })
 
-export async function add(key: EntityKey, data: Record<string, any>) {
+/** Ajoute plusieurs lignes d'un coup (une seule écriture dans le stockage local). Renvoie les lignes créées. */
+export async function addMany(key: EntityKey, items: Array<Record<string, any>>) {
   // Donnée commune : on garde son auteur dès la création (le serveur confirmera à la synchro).
   const auteur =
     entityByKey(key).shared && session.user
       ? { user_id: session.user.id, auteur: { id: session.user.id, name: session.user.name } }
       : {}
 
-  state[key].unshift({
+  const now = new Date().toISOString()
+  const created = items.map((data) => ({
     ...data,
     ...auteur,
     uuid: newUuid(),
     synced: false,
-    updated_at: new Date().toISOString(),
-  })
+    updated_at: now,
+  }))
+
+  state[key] = [...created, ...state[key]]
   await persist(key)
-  return state[key][0]
+  return created
+}
+
+export async function add(key: EntityKey, data: Record<string, any>) {
+  const [created] = await addMany(key, [data])
+  return state[key].find((r) => r.uuid === created.uuid)!
 }
 
 /** Copie une ligne (nouvel uuid, nom suivi de « (copie) ») et renvoie la copie. */
