@@ -12,13 +12,18 @@ cp .env.example .env   # optionnel : VITE_API_URL pour viser un autre serveur (p
 npm run dev
 ```
 
-## Mobile (Capacitor)
+## Build Android en une commande
+
+Prérequis : JDK 21 et Android SDK (variable `ANDROID_HOME` définie).
 
 ```bash
-npm run build
-npx cap add android   # ou ios
-npx cap sync
+npm run apk       # installe si besoin, build, crée le projet Android, produit l'APK de debug
+npm run android   # même préparation, puis ouvre le projet dans Android Studio
 ```
+
+L'APK est écrit dans `android/app/build/outputs/apk/debug/app-debug.apk` (le dossier `android/` est généré
+localement et ignoré par git). Autres scripts : `npm run build` (vérification des types + build web),
+`npm run build:web` (build web seul), `npm run typecheck`.
 
 ## Synchronisation
 

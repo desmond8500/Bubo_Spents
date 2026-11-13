@@ -6,9 +6,14 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "build:web": "vite build",
+    "typecheck": "vue-tsc --noEmit",
+    "preview": "vite preview",
+    "apk": "node scripts/build-android.mjs",
+    "android": "node scripts/build-android.mjs --open"
   },
   "dependencies": {
+    "@capacitor/android": "^7.6.10",
     "@capacitor/core": "^7.6.10",
     "@capacitor/preferences": "^7.0.0",
     "@ionic/vue": "^8.0.0",

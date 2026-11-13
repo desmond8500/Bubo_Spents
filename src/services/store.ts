@@ -39,10 +39,19 @@ export async function init() {
   state.lastSync = value
 }
 
+/** crypto.randomUUID n'existe pas hors contexte sécurisé (ex. http://192.168.x.x en dev) : repli sur Math.random. */
+const newUuid = () =>
+  typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0
+        return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16)
+      })
+
 export async function add(key: EntityKey, data: Record<string, any>) {
   state[key].unshift({
     ...data,
-    uuid: crypto.randomUUID(),
+    uuid: newUuid(),
     synced: false,
     updated_at: new Date().toISOString(),
   })
