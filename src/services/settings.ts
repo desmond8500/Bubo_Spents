@@ -9,6 +9,8 @@ export const settings = reactive({
   /** Vide = adresse par défaut (VITE_API_URL). */
   apiUrl: '',
   currency: 'FCFA',
+  /** Synchronisation automatique toutes les 8 heures. */
+  autoSync: true,
 })
 
 let loaded = false

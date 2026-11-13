@@ -48,7 +48,7 @@ import {
   IonItem, IonLabel, IonIcon, IonNote, onIonViewWillEnter,
 } from '@ionic/vue'
 import {
-  addCircleOutline, alertCircleOutline, createOutline, logInOutline, logOutOutline, moonOutline,
+  addCircleOutline, alertCircleOutline, createOutline, downloadOutline, logInOutline, logOutOutline, moonOutline,
   personAddOutline, refreshOutline, shieldCheckmarkOutline, trashOutline,
 } from 'ionicons/icons'
 import { api } from '../services/api'
@@ -73,9 +73,12 @@ const ACTIONS: Record<string, { label: string; icon: string; color: string }> = 
   logout: { label: 'Déconnexion', icon: logOutOutline, color: 'medium' },
   register: { label: 'Inscription', icon: personAddOutline, color: 'success' },
   role: { label: 'Changement de rôle', icon: shieldCheckmarkOutline, color: 'secondary' },
+  export: { label: 'Export', icon: downloadOutline, color: 'medium' },
 }
 
 const ENTITIES: Record<string, string> = {
+  budgets: 'Crédit du budget',
+  categories: 'Catégorie',
   marques: 'Marque',
   fournisseurs: 'Fournisseur',
   articles: 'Article',

@@ -42,6 +42,43 @@
         </div>
       </section>
 
+      <ion-card class="budget">
+        <ion-card-header>
+          <ion-card-subtitle>Budget commun · visible par tous</ion-card-subtitle>
+          <ion-card-title v-if="budget.active" :color="budget.reste < 0 ? 'danger' : 'success'">
+            {{ fmt(budget.reste) }}
+            <small>restant</small>
+          </ion-card-title>
+          <ion-card-title v-else>Aucun budget</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <template v-if="budget.active">
+            <ion-progress-bar
+              :value="budget.disponible > 0 ? Math.min(1, budget.depenses / budget.disponible) : 1"
+              :color="budget.reste < 0 ? 'danger' : 'primary'"
+            />
+            <div class="budget-lines">
+              <div><span>Report du mois précédent</span><strong>{{ fmt(budget.report) }}</strong></div>
+              <div><span>Crédits du mois</span><strong>{{ fmt(budget.credits) }}</strong></div>
+              <div><span>Dépenses générales</span><strong>{{ fmt(budget.depenses) }}</strong></div>
+            </div>
+            <p class="hint">Le reste sera reporté sur le budget du mois suivant.</p>
+          </template>
+          <p v-else-if="budget.start" class="hint">Le budget commence en {{ startLabel }}.</p>
+          <p v-else class="hint">Définissez le solde de départ : il servira de budget mensuel pour tous.</p>
+
+          <div class="budget-actions">
+            <ion-button v-if="canCreate('budgets')" size="small" @click="credit()">
+              <ion-icon slot="start" :icon="addCircleOutline" />
+              {{ budget.start ? 'Créditer' : 'Définir le solde de départ' }}
+            </ion-button>
+            <ion-button v-if="budget.start" size="small" fill="outline" router-link="/tabs/resume/budget">
+              Historique
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
       <ion-list inset>
         <ion-list-header>
           <ion-label>Vos dépenses</ion-label>
@@ -61,6 +98,19 @@
             <p>Visibles par vous seul</p>
           </ion-label>
           <ion-note slot="end" class="total">{{ fmt(totals.perso) }}</ion-note>
+        </ion-item>
+      </ion-list>
+
+      <ion-list v-if="aRembourser.count" inset>
+        <ion-list-header>
+          <ion-label>Emprunts</ion-label>
+        </ion-list-header>
+        <ion-item router-link="/tabs/emprunts" detail>
+          <ion-label>
+            <h3>À rembourser</h3>
+            <p>{{ aRembourser.count }} emprunt(s) non remboursé(s), tous mois confondus</p>
+          </ion-label>
+          <ion-note slot="end" class="total">{{ fmt(aRembourser.total) }}</ion-note>
         </ion-item>
       </ion-list>
 
@@ -101,6 +151,13 @@
         <ion-icon :icon="moonOutline" />
         <p>Aucune dépense de votre part ce mois-ci.</p>
       </div>
+
+      <entity-form
+        entity="budgets"
+        :is-open="creditOpen"
+        :defaults="creditDefaults"
+        @close="creditOpen = false"
+      />
     </ion-content>
   </ion-page>
 </template>
@@ -109,13 +166,16 @@
 import { computed, ref } from 'vue'
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonIcon, IonList,
-  IonListHeader, IonItem, IonLabel, IonNote, IonProgressBar,
+  IonListHeader, IonItem, IonLabel, IonNote, IonProgressBar, IonCard, IonCardHeader, IonCardSubtitle,
+  IonCardTitle, IonCardContent,
 } from '@ionic/vue'
 import {
-  chevronBack, chevronForward, moonOutline, peopleOutline, personOutline, settingsOutline,
+  addCircleOutline, chevronBack, chevronForward, moonOutline, peopleOutline, personOutline, settingsOutline,
 } from 'ionicons/icons'
 import { fmt, type EntityKey, type Row } from '../services/entities'
-import { isMine } from '../services/permissions'
+import EntityForm from '../components/EntityForm.vue'
+import { budgetFor } from '../services/budget'
+import { canCreate, isMine } from '../services/permissions'
 import { session } from '../services/session'
 import { lookup, visible } from '../services/store'
 
@@ -158,6 +218,29 @@ const totals = computed(() => {
 })
 
 const solde = computed(() => totals.value.revenus - totals.value.mesDepenses)
+
+/** Emprunts non remboursés, tous mois confondus. */
+const aRembourser = computed(() => {
+  const rows = visible('emprunts').filter((r) => !r.rembourse)
+  return { count: rows.length, total: sum(rows) }
+})
+
+/** Budget commun du mois affiché (report des mois précédents + crédits − dépenses générales). */
+const budget = computed(() => budgetFor(month.value))
+
+const startLabel = computed(() => {
+  if (!budget.value.start) return ''
+  const [y, m] = budget.value.start.split('-').map(Number)
+  return new Date(y, m - 1, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+})
+
+const creditOpen = ref(false)
+const creditDefaults = ref<Record<string, any>>({})
+
+function credit() {
+  creditDefaults.value = budget.value.start ? {} : { description: 'Solde de départ' }
+  creditOpen.value = true
+}
 
 /** Dépenses générales regroupées par personne qui les a saisies. */
 const parPersonne = computed(() => {
@@ -256,6 +339,39 @@ const byPoste = computed(() => {
 }
 .chip .loan {
   color: #ffd27d;
+}
+.budget small {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ion-color-medium);
+}
+.budget-lines {
+  margin-top: 12px;
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+}
+.budget-lines div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.budget-lines span {
+  color: var(--ion-color-medium);
+}
+.budget-lines strong {
+  font-variant-numeric: tabular-nums;
+}
+.hint {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--ion-color-medium);
+}
+.budget-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
 }
 /* Même code couleur que les listes : indigo = dépense générale, ambre = dépense personnelle. */
 .dot {

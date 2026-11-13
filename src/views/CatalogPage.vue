@@ -19,12 +19,13 @@
 
 <script setup lang="ts">
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel, IonIcon, IonNote } from '@ionic/vue'
-import { receiptOutline, pricetagOutline, storefrontOutline } from 'ionicons/icons'
+import { layersOutline, receiptOutline, pricetagOutline, storefrontOutline } from 'ionicons/icons'
 import type { EntityKey } from '../services/entities'
 import { visible } from '../services/store'
 
 const links: Array<{ to: string; label: string; icon: string; key: EntityKey }> = [
   { to: '/tabs/catalogue/articles', label: 'Articles', icon: receiptOutline, key: 'articles' },
+  { to: '/tabs/catalogue/categories', label: 'Catégories', icon: layersOutline, key: 'categories' },
   { to: '/tabs/catalogue/marques', label: 'Marques', icon: pricetagOutline, key: 'marques' },
   { to: '/tabs/catalogue/fournisseurs', label: 'Fournisseurs', icon: storefrontOutline, key: 'fournisseurs' },
 ]

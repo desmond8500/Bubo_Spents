@@ -84,6 +84,11 @@
         <ion-item v-if="state.error">
           <ion-label color="danger" class="ion-text-wrap">{{ state.error }}</ion-label>
         </ion-item>
+        <ion-item>
+          <ion-toggle :checked="settings.autoSync" @ion-change="settings.autoSync = $event.detail.checked">
+            Synchronisation automatique toutes les 8 h
+          </ion-toggle>
+        </ion-item>
         <ion-item button :detail="false" :disabled="state.syncing" @click="sync">
           <ion-icon slot="start" :icon="syncOutline" />
           <ion-label>Synchroniser maintenant</ion-label>
@@ -105,7 +110,7 @@
 import { computed, ref } from 'vue'
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton, IonContent, IonList,
-  IonListHeader, IonItem, IonLabel, IonInput, IonIcon, IonNote, alertController, toastController,
+  IonListHeader, IonItem, IonLabel, IonInput, IonIcon, IonNote, IonToggle, alertController, toastController,
 } from '@ionic/vue'
 import { listOutline, logOutOutline, peopleOutline, syncOutline, trashOutline, wifiOutline } from 'ionicons/icons'
 import { useRouter } from 'vue-router'

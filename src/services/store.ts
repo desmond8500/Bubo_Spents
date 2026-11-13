@@ -3,6 +3,7 @@ import { Preferences } from '@capacitor/preferences'
 import { api } from './api'
 import { entities, entityByKey, type EntityKey, type Lookup, type Row } from './entities'
 import { session, setSession } from './session'
+import { settings } from './settings'
 
 type State = Record<EntityKey, Row[]> & {
   syncing: boolean
@@ -11,6 +12,8 @@ type State = Record<EntityKey, Row[]> & {
 }
 
 export const state = reactive<State>({
+  budgets: [],
+  categories: [],
   depenses: [],
   depenses_personnelles: [],
   revenus: [],
@@ -65,6 +68,21 @@ export async function add(key: EntityKey, data: Record<string, any>) {
     updated_at: new Date().toISOString(),
   })
   await persist(key)
+  return state[key][0]
+}
+
+/** Copie une ligne (nouvel uuid, nom suivi de « (copie) ») et renvoie la copie. */
+export async function duplicate(key: EntityKey, uuid: string) {
+  const source = state[key].find((r) => r.uuid === uuid)
+  if (!source) return null
+
+  const data: Record<string, any> = {}
+  for (const f of entityByKey(key).fields) {
+    data[f.key] = JSON.parse(JSON.stringify(source[f.key] ?? null))
+  }
+  if (typeof data.nom === 'string' && data.nom) data.nom = `${data.nom} (copie)`
+
+  return add(key, data)
 }
 
 /** Lignes affichées : les suppressions en attente de synchro sont masquées. */
@@ -119,7 +137,9 @@ export async function sync() {
     }
     const { data } = await api.post('/sync', payload)
     for (const e of entities) {
-      state[e.key] = (data[e.key] as Row[]).map((r) => ({ ...r, synced: true, server: true }))
+      const rows = data[e.key] as Row[] | undefined
+      if (!rows) continue // le serveur ne connaît pas encore cette table : on garde les lignes locales
+      state[e.key] = rows.map((r) => ({ ...r, synced: true, server: true }))
       await persist(e.key)
     }
     // Le serveur renvoie le rôle à jour et le nombre d'écritures refusées faute de droits.
@@ -136,4 +156,36 @@ export async function sync() {
   } finally {
     state.syncing = false
   }
+}
+
+const AUTO_SYNC_EVERY = 8 * 60 * 60 * 1000 // 8 heures
+const AUTO_SYNC_CHECK = 15 * 60 * 1000 // l'échéance est vérifiée toutes les 15 minutes
+let autoSyncStarted = false
+
+const autoSyncDue = () =>
+  settings.autoSync &&
+  !!session.token &&
+  !state.syncing &&
+  navigator.onLine !== false &&
+  (!state.lastSync || Date.now() - Date.parse(state.lastSync) >= AUTO_SYNC_EVERY)
+
+/**
+ * Synchronisation automatique : toutes les 8 heures, tant que l'application est ouverte.
+ * Elle se déclenche aussi quand l'application revient au premier plan ou que le réseau revient.
+ * (Une application fermée ne peut pas se synchroniser : l'échéance est rattrapée à la prochaine ouverture.)
+ */
+export function startAutoSync() {
+  if (autoSyncStarted) return
+  autoSyncStarted = true
+
+  const tick = () => {
+    if (autoSyncDue()) sync()
+  }
+
+  tick()
+  setInterval(tick, AUTO_SYNC_CHECK)
+  window.addEventListener('online', tick)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') tick()
+  })
 }
