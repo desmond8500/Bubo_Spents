@@ -2,6 +2,9 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
+        <ion-buttons v-if="isCatalogue" slot="start">
+          <ion-back-button default-href="/tabs/catalogue" text="" />
+        </ion-buttons>
         <ion-title>{{ def.title }}</ion-title>
         <ion-buttons slot="end">
           <ion-button :disabled="state.syncing" @click="sync">
@@ -22,14 +25,12 @@
       <ion-list>
         <ion-item-sliding v-for="row in rows" :key="row.uuid">
           <ion-item button detail="false" @click="openForm(row)">
+            <ion-avatar v-if="def.image?.(row)" slot="start">
+              <img :src="def.image(row)!" alt="" />
+            </ion-avatar>
             <ion-label>
-              <h2>{{ row.nom }}</h2>
-              <p v-if="entity === 'articles'">
-                {{ row.prix }} · {{ row.depense_le }}
-                <template v-if="row.marque_uuid"> · {{ labelOf('marques', row.marque_uuid) }}</template>
-                <template v-if="row.fournisseur_uuid"> · {{ labelOf('fournisseurs', row.fournisseur_uuid) }}</template>
-              </p>
-              <p v-else-if="row.contact">{{ row.contact }}</p>
+              <h2>{{ def.label(row, lookup) }}</h2>
+              <p v-if="def.subtitle">{{ def.subtitle(row, lookup) }}</p>
             </ion-label>
             <ion-icon slot="end" :icon="row.synced ? cloudDoneOutline : cloudOfflineOutline" />
           </ion-item>
@@ -40,6 +41,10 @@
           </ion-item-options>
         </ion-item-sliding>
       </ion-list>
+
+      <ion-note v-if="!rows.length" class="ion-padding ion-text-center" style="display: block">
+        Rien pour l'instant. Appuyez sur + pour ajouter.
+      </ion-note>
 
       <ion-fab slot="fixed" vertical="bottom" horizontal="end">
         <ion-fab-button @click="openForm()">
@@ -57,27 +62,41 @@
           </ion-toolbar>
         </ion-header>
         <ion-content class="ion-padding">
-          <ion-item v-for="f in def.fields" :key="f.key">
-            <ion-select
-              v-if="f.type === 'ref'"
+          <template v-for="f in def.fields" :key="f.key">
+            <image-picker
+              v-if="f.type === 'image' || f.type === 'images'"
               v-model="form[f.key]"
               :label="f.label"
-              label-placement="stacked"
-              interface="popover"
-            >
-              <ion-select-option v-for="o in state[f.ref!]" :key="o.uuid" :value="o.uuid">
-                {{ o.nom }}
-              </ion-select-option>
-            </ion-select>
-            <ion-input
-              v-else
-              v-model="form[f.key]"
-              :label="f.label"
-              label-placement="stacked"
-              :type="f.type"
-              :inputmode="f.type === 'number' ? 'decimal' : undefined"
+              :multiple="f.type === 'images'"
             />
-          </ion-item>
+            <ion-item v-else-if="f.type === 'ref'">
+              <ion-select
+                v-model="form[f.key]"
+                :label="f.label"
+                label-placement="stacked"
+                interface="popover"
+                @ion-change="onChange(f.key)"
+              >
+                <ion-select-option v-if="!f.required" value="">Aucun</ion-select-option>
+                <ion-select-option v-for="o in options(f.ref!)" :key="o.uuid" :value="o.uuid">
+                  {{ entityByKey(f.ref!).label(o, lookup) }}
+                </ion-select-option>
+              </ion-select>
+            </ion-item>
+            <ion-item v-else-if="f.type === 'textarea'">
+              <ion-textarea v-model="form[f.key]" :label="f.label" label-placement="stacked" :auto-grow="true" />
+            </ion-item>
+            <ion-item v-else>
+              <ion-input
+                v-model="form[f.key]"
+                :label="f.label"
+                label-placement="stacked"
+                :type="f.type"
+                :inputmode="f.type === 'number' ? 'decimal' : undefined"
+                @ion-input="onChange(f.key)"
+              />
+            </ion-item>
+          </template>
           <ion-button expand="block" class="ion-margin-top" :disabled="!valid" @click="save">
             Enregistrer
           </ion-button>
@@ -88,20 +107,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, nextTick, reactive, ref } from 'vue'
 import {
-  IonPage, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonList, IonItem,
-  IonLabel, IonIcon, IonNote, IonFab, IonFabButton, IonModal, IonInput, IonSelect, IonSelectOption,
-  IonItemSliding, IonItemOptions, IonItemOption, alertController,
+  IonPage, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonBackButton, IonContent, IonList,
+  IonItem, IonLabel, IonAvatar, IonIcon, IonNote, IonFab, IonFabButton, IonModal, IonInput, IonTextarea,
+  IonSelect, IonSelectOption, IonItemSliding, IonItemOptions, IonItemOption, alertController,
 } from '@ionic/vue'
 import { addOutline, syncOutline, cloudDoneOutline, cloudOfflineOutline, trashOutline } from 'ionicons/icons'
+import ImagePicker from '../components/ImagePicker.vue'
 import { entityByKey, type EntityKey, type Row } from '../services/entities'
-import { state, add, update, remove, visible, sync, pendingCount } from '../services/store'
+import { state, lookup, add, update, remove, visible, sync, pendingCount } from '../services/store'
 
 const props = defineProps<{ entity: EntityKey }>()
 
 const def = computed(() => entityByKey(props.entity))
 const rows = computed(() => visible(props.entity))
+const isCatalogue = computed(() => ['articles', 'marques', 'fournisseurs'].includes(props.entity))
+const options = (key: EntityKey) => visible(key)
 
 const isOpen = ref(false)
 const editingUuid = ref<string | null>(null)
@@ -109,19 +131,55 @@ const form = reactive<Record<string, any>>({})
 
 const today = () => new Date().toISOString().slice(0, 10)
 
+function emptyValue(f: { type: string; default?: any }) {
+  if (f.default !== undefined) return f.default
+  if (f.type === 'date') return today()
+  if (f.type === 'images') return []
+  if (f.type === 'image') return null
+  return ''
+}
+
 function openForm(row?: Row) {
   editingUuid.value = row?.uuid ?? null
   for (const k of Object.keys(form)) delete form[k]
   for (const f of def.value.fields) {
-    form[f.key] = row ? row[f.key] ?? '' : f.type === 'date' ? today() : ''
+    const v = row?.[f.key]
+    form[f.key] = row ? (v ?? emptyValue({ type: f.type === 'date' ? 'text' : f.type })) : emptyValue(f)
   }
   isOpen.value = true
+}
+
+const filled = (v: unknown) => (Array.isArray(v) ? v.length > 0 : String(v ?? '').trim() !== '')
+const valid = computed(() => def.value.fields.every((f) => !f.required || filled(form[f.key])))
+
+const toNumber = (v: unknown) => Number(String(v).replace(',', '.'))
+
+/** Dépense : le montant se recalcule (prix x quantité) quand l'article ou la quantité change. */
+async function onChange(key: string) {
+  if (props.entity !== 'depenses' || (key !== 'article_uuid' && key !== 'quantite')) return
+  await nextTick()
+  const article = lookup('articles', form.article_uuid)
+  const quantite = toNumber(form.quantite)
+  if (article && quantite > 0) form.montant = Math.round(Number(article.prix) * quantite * 100) / 100
+}
+
+async function save() {
+  const data: Record<string, any> = {}
+  for (const f of def.value.fields) {
+    const v = form[f.key]
+    if (f.type === 'number') data[f.key] = toNumber(v)
+    else if (f.type === 'images') data[f.key] = v ?? []
+    else data[f.key] = v === '' ? null : v
+  }
+  if (editingUuid.value) await update(props.entity, editingUuid.value, data)
+  else await add(props.entity, data)
+  isOpen.value = false
 }
 
 async function confirmRemove(row: Row) {
   const alert = await alertController.create({
     header: 'Supprimer ?',
-    message: row.nom,
+    message: def.value.label(row, lookup),
     buttons: [
       { text: 'Annuler', role: 'cancel' },
       { text: 'Supprimer', role: 'destructive', handler: () => remove(props.entity, row.uuid) },
@@ -129,19 +187,4 @@ async function confirmRemove(row: Row) {
   })
   await alert.present()
 }
-
-const valid = computed(() => def.value.fields.every((f) => !f.required || String(form[f.key] ?? '').trim() !== ''))
-
-async function save() {
-  const data: Record<string, any> = {}
-  for (const f of def.value.fields) {
-    const v = form[f.key]
-    data[f.key] = f.type === 'number' ? Number(String(v).replace(',', '.')) : v === '' ? null : v
-  }
-  if (editingUuid.value) await update(props.entity, editingUuid.value, data)
-  else await add(props.entity, data)
-  isOpen.value = false
-}
-
-const labelOf = (key: EntityKey, uuid: string) => state[key].find((r) => r.uuid === uuid)?.nom ?? ''
 </script>

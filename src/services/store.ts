@@ -1,25 +1,28 @@
 import { reactive } from 'vue'
 import { Preferences } from '@capacitor/preferences'
 import { api } from './api'
-import { entities, type EntityKey, type Row } from './entities'
+import { entities, type EntityKey, type Lookup, type Row } from './entities'
 
-interface State {
-  marques: Row[]
-  fournisseurs: Row[]
-  articles: Row[]
+type State = Record<EntityKey, Row[]> & {
   syncing: boolean
   lastSync: string | null
   error: string | null
 }
 
 export const state = reactive<State>({
+  depenses: [],
+  revenus: [],
+  emprunts: [],
+  articles: [],
   marques: [],
   fournisseurs: [],
-  articles: [],
   syncing: false,
   lastSync: null,
   error: null,
 })
+
+export const lookup: Lookup = (key, uuid) =>
+  uuid ? state[key].find((r) => r.uuid === uuid && !r.deleted) : undefined
 
 const storageKey = (k: EntityKey) => `bubo_spents_${k}`
 

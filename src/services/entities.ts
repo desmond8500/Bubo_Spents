@@ -1,17 +1,12 @@
-export type EntityKey = 'marques' | 'fournisseurs' | 'articles'
+export type EntityKey = 'depenses' | 'revenus' | 'emprunts' | 'articles' | 'marques' | 'fournisseurs'
 
 export interface Field {
   key: string
   label: string
-  type: 'text' | 'number' | 'date' | 'ref'
+  type: 'text' | 'textarea' | 'number' | 'date' | 'ref' | 'image' | 'images'
   ref?: EntityKey
   required?: boolean
-}
-
-export interface EntityDef {
-  key: EntityKey
-  title: string
-  fields: Field[]
+  default?: any
 }
 
 export interface Row {
@@ -21,30 +16,95 @@ export interface Row {
   [field: string]: any
 }
 
+export type Lookup = (key: EntityKey, uuid: string | null | undefined) => Row | undefined
+
+export interface EntityDef {
+  key: EntityKey
+  title: string
+  fields: Field[]
+  label: (row: Row, lookup: Lookup) => string
+  subtitle?: (row: Row, lookup: Lookup) => string
+  image?: (row: Row) => string | null
+}
+
+export const fmt = (n: unknown) => new Intl.NumberFormat('fr-FR').format(Number(n) || 0)
+
+const join = (...parts: Array<string | null | undefined | false>) => parts.filter(Boolean).join(' · ')
+
 export const entities: EntityDef[] = [
+  {
+    key: 'depenses',
+    title: 'Dépenses',
+    fields: [
+      { key: 'article_uuid', label: 'Article', type: 'ref', ref: 'articles', required: true },
+      { key: 'quantite', label: 'Quantité', type: 'number', required: true, default: 1 },
+      { key: 'montant', label: 'Montant', type: 'number', required: true },
+      { key: 'date', label: 'Date', type: 'date', required: true },
+    ],
+    label: (r, lookup) => lookup('articles', r.article_uuid)?.nom ?? 'Article supprimé',
+    subtitle: (r) => join(r.date, fmt(r.montant), Number(r.quantite) !== 1 && `x${r.quantite}`),
+  },
+  {
+    key: 'revenus',
+    title: 'Revenus',
+    fields: [
+      { key: 'description', label: 'Description', type: 'text', required: true },
+      { key: 'montant', label: 'Montant', type: 'number', required: true },
+      { key: 'date', label: 'Date', type: 'date', required: true },
+    ],
+    label: (r) => r.description,
+    subtitle: (r) => join(r.date, fmt(r.montant)),
+  },
+  {
+    key: 'emprunts',
+    title: 'Emprunts',
+    fields: [
+      { key: 'description', label: 'Description', type: 'text', required: true },
+      { key: 'montant', label: 'Montant', type: 'number', required: true },
+      { key: 'date', label: 'Date', type: 'date', required: true },
+    ],
+    label: (r) => r.description,
+    subtitle: (r) => join(r.date, fmt(r.montant)),
+  },
   {
     key: 'articles',
     title: 'Articles',
     fields: [
       { key: 'nom', label: 'Nom', type: 'text', required: true },
       { key: 'prix', label: 'Prix', type: 'number', required: true },
-      { key: 'depense_le', label: 'Date', type: 'date', required: true },
+      { key: 'description', label: 'Description', type: 'textarea' },
+      { key: 'images', label: 'Images', type: 'images' },
       { key: 'marque_uuid', label: 'Marque', type: 'ref', ref: 'marques' },
       { key: 'fournisseur_uuid', label: 'Fournisseur', type: 'ref', ref: 'fournisseurs' },
     ],
+    label: (r) => r.nom,
+    subtitle: (r, lookup) =>
+      join(fmt(r.prix), lookup('marques', r.marque_uuid)?.nom, lookup('fournisseurs', r.fournisseur_uuid)?.nom),
+    image: (r) => r.images?.[0] ?? null,
   },
   {
     key: 'marques',
     title: 'Marques',
-    fields: [{ key: 'nom', label: 'Nom', type: 'text', required: true }],
+    fields: [
+      { key: 'nom', label: 'Nom', type: 'text', required: true },
+      { key: 'description', label: 'Description', type: 'textarea' },
+      { key: 'logo', label: 'Logo', type: 'image' },
+    ],
+    label: (r) => r.nom,
+    subtitle: (r) => r.description ?? '',
+    image: (r) => r.logo ?? null,
   },
   {
     key: 'fournisseurs',
     title: 'Fournisseurs',
     fields: [
       { key: 'nom', label: 'Nom', type: 'text', required: true },
-      { key: 'contact', label: 'Contact', type: 'text' },
+      { key: 'description', label: 'Description', type: 'textarea' },
+      { key: 'logo', label: 'Logo', type: 'image' },
     ],
+    label: (r) => r.nom,
+    subtitle: (r) => r.description ?? '',
+    image: (r) => r.logo ?? null,
   },
 ]
 

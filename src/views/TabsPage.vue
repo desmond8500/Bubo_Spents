@@ -3,17 +3,21 @@
     <ion-tabs>
       <ion-router-outlet />
       <ion-tab-bar slot="bottom">
-        <ion-tab-button tab="articles" href="/tabs/articles">
-          <ion-icon :icon="receiptOutline" />
-          <ion-label>Articles</ion-label>
+        <ion-tab-button tab="depenses" href="/tabs/depenses">
+          <ion-icon :icon="cartOutline" />
+          <ion-label>Dépenses</ion-label>
         </ion-tab-button>
-        <ion-tab-button tab="marques" href="/tabs/marques">
-          <ion-icon :icon="pricetagOutline" />
-          <ion-label>Marques</ion-label>
+        <ion-tab-button tab="revenus" href="/tabs/revenus">
+          <ion-icon :icon="cashOutline" />
+          <ion-label>Revenus</ion-label>
         </ion-tab-button>
-        <ion-tab-button tab="fournisseurs" href="/tabs/fournisseurs">
-          <ion-icon :icon="storefrontOutline" />
-          <ion-label>Fournisseurs</ion-label>
+        <ion-tab-button tab="emprunts" href="/tabs/emprunts">
+          <ion-icon :icon="swapHorizontalOutline" />
+          <ion-label>Emprunts</ion-label>
+        </ion-tab-button>
+        <ion-tab-button tab="catalogue" href="/tabs/catalogue">
+          <ion-icon :icon="albumsOutline" />
+          <ion-label>Catalogue</ion-label>
         </ion-tab-button>
       </ion-tab-bar>
     </ion-tabs>
@@ -22,5 +26,5 @@
 
 <script setup lang="ts">
 import { IonPage, IonTabs, IonRouterOutlet, IonTabBar, IonTabButton, IonIcon, IonLabel } from '@ionic/vue'
-import { receiptOutline, pricetagOutline, storefrontOutline } from 'ionicons/icons'
+import { cartOutline, cashOutline, swapHorizontalOutline, albumsOutline } from 'ionicons/icons'
 </script>
