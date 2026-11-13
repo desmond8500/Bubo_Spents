@@ -2,7 +2,11 @@
   <ion-page>
     <ion-content class="ion-padding">
       <div class="wrap">
-        <h1 class="ion-text-center">Bubo Spents</h1>
+        <div class="brand">
+          <div class="logo"><ion-icon :icon="walletOutline" /></div>
+          <h1>Bubo Spents</h1>
+          <p>Vos dépenses, sous contrôle.</p>
+        </div>
 
         <ion-segment v-model="mode" class="ion-margin-bottom">
           <ion-segment-button value="login"><ion-label>Connexion</ion-label></ion-segment-button>
@@ -62,14 +66,15 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { IonPage, IonContent, IonSegment, IonSegmentButton, IonLabel, IonItem, IonInput, IonButton, IonNote } from '@ionic/vue'
+import { IonPage, IonContent, IonSegment, IonSegmentButton, IonLabel, IonItem, IonInput, IonButton, IonNote, IonIcon } from '@ionic/vue'
+import { walletOutline } from 'ionicons/icons'
 import { errorMessage, login, register } from '../services/auth'
 import { DEFAULT_API_URL, settings } from '../services/settings'
 import { sync } from '../services/store'
 
 const router = useRouter()
 
-const mode = ref<'login' | 'register'>('login')
+const mode = ref<string>('login')
 const name = ref('')
 const email = ref('')
 const password = ref('')
@@ -103,6 +108,30 @@ async function submit() {
 .wrap {
   max-width: 420px;
   margin: 0 auto;
-  padding-top: 8vh;
+  padding-top: 6vh;
+}
+.brand {
+  text-align: center;
+  margin-bottom: 28px;
+}
+.logo {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 12px;
+  display: grid;
+  place-items: center;
+  border-radius: 22px;
+  font-size: 36px;
+  color: var(--ion-color-secondary);
+  background: linear-gradient(135deg, #4a48b5 0%, #27256f 100%);
+  box-shadow: 0 10px 24px rgba(39, 37, 111, 0.3);
+}
+.brand h1 {
+  margin: 0;
+  font-weight: 800;
+}
+.brand p {
+  margin: 4px 0 0;
+  color: var(--ion-color-medium);
 }
 </style>

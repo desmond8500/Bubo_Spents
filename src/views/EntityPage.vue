@@ -22,17 +22,21 @@
         {{ pendingCount() }} élément(s) en attente de synchronisation
       </ion-note>
 
-      <ion-list>
+      <ion-list v-if="rows.length" inset>
         <ion-item-sliding v-for="row in rows" :key="row.uuid">
           <ion-item button detail="false" @click="openForm(row)">
-            <ion-avatar v-if="def.image?.(row)" slot="start">
-              <img :src="def.image(row)!" alt="" />
-            </ion-avatar>
+            <div v-if="def.image" slot="start" class="avatar">
+              <img v-if="thumb(row)" :src="thumb(row)!" alt="" />
+              <span v-else>{{ initial(row) }}</span>
+            </div>
             <ion-label>
               <h2>{{ def.label(row, lookup) }}</h2>
-              <p v-if="def.subtitle">{{ def.subtitle(row, lookup) }}</p>
+              <p v-if="subtitle(row)">{{ subtitle(row) }}</p>
             </ion-label>
-            <ion-icon slot="end" :icon="row.synced ? cloudDoneOutline : cloudOfflineOutline" />
+            <div slot="end" class="end">
+              <span v-if="amount(row) !== null" class="amount" :class="def.tone">{{ fmt(amount(row)) }}</span>
+              <ion-icon class="sync" :icon="row.synced ? cloudDoneOutline : cloudOfflineOutline" />
+            </div>
           </ion-item>
           <ion-item-options side="end">
             <ion-item-option color="danger" @click="confirmRemove(row)">
@@ -42,12 +46,13 @@
         </ion-item-sliding>
       </ion-list>
 
-      <ion-note v-if="!rows.length" class="ion-padding ion-text-center" style="display: block">
-        Rien pour l'instant. Appuyez sur + pour ajouter.
-      </ion-note>
+      <div v-else class="empty">
+        <ion-icon :icon="moonOutline" />
+        <p>Rien pour l'instant.<br />Appuyez sur + pour ajouter.</p>
+      </div>
 
       <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-        <ion-fab-button @click="openForm()">
+        <ion-fab-button color="secondary" @click="openForm()">
           <ion-icon :icon="addOutline" />
         </ion-fab-button>
       </ion-fab>
@@ -110,12 +115,12 @@
 import { computed, nextTick, reactive, ref } from 'vue'
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonBackButton, IonContent, IonList,
-  IonItem, IonLabel, IonAvatar, IonIcon, IonNote, IonFab, IonFabButton, IonModal, IonInput, IonTextarea,
+  IonItem, IonLabel, IonIcon, IonNote, IonFab, IonFabButton, IonModal, IonInput, IonTextarea,
   IonSelect, IonSelectOption, IonItemSliding, IonItemOptions, IonItemOption, alertController,
 } from '@ionic/vue'
-import { addOutline, syncOutline, cloudDoneOutline, cloudOfflineOutline, trashOutline } from 'ionicons/icons'
+import { addOutline, syncOutline, cloudDoneOutline, cloudOfflineOutline, trashOutline, moonOutline } from 'ionicons/icons'
 import ImagePicker from '../components/ImagePicker.vue'
-import { entityByKey, type EntityKey, type Row } from '../services/entities'
+import { entityByKey, fmt, type EntityKey, type Row } from '../services/entities'
 import { state, lookup, add, update, remove, visible, sync, pendingCount } from '../services/store'
 
 const props = defineProps<{ entity: EntityKey }>()
@@ -124,6 +129,11 @@ const def = computed(() => entityByKey(props.entity))
 const rows = computed(() => visible(props.entity))
 const isCatalogue = computed(() => ['articles', 'marques', 'fournisseurs'].includes(props.entity))
 const options = (key: EntityKey) => visible(key)
+
+const thumb = (row: Row) => def.value.image?.(row) ?? null
+const subtitle = (row: Row) => def.value.subtitle?.(row, lookup) ?? ''
+const amount = (row: Row) => (def.value.amount ? def.value.amount(row) : null)
+const initial = (row: Row) => (def.value.label(row, lookup).trim().charAt(0) || '?').toUpperCase()
 
 const isOpen = ref(false)
 const editingUuid = ref<string | null>(null)
@@ -188,3 +198,59 @@ async function confirmRemove(row: Row) {
   await alert.present()
 }
 </script>
+
+<style scoped>
+.avatar {
+  width: 44px;
+  height: 44px;
+  margin-inline-end: 12px;
+  border-radius: 12px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: var(--ion-color-primary);
+  background: rgba(var(--ion-color-primary-rgb), 0.14);
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.amount {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.amount.success {
+  color: var(--ion-color-success);
+}
+.amount.danger {
+  color: var(--ion-color-danger);
+}
+.amount.secondary {
+  color: var(--ion-color-secondary-shade);
+}
+.amount.medium {
+  color: var(--ion-color-medium);
+}
+.sync {
+  font-size: 13px;
+  color: var(--ion-color-medium);
+  opacity: 0.7;
+}
+.empty {
+  text-align: center;
+  padding: 72px 24px;
+  color: var(--ion-color-medium);
+}
+.empty ion-icon {
+  font-size: 56px;
+  opacity: 0.5;
+}
+</style>

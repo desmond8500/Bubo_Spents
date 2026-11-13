@@ -1,0 +1,103 @@
+/*
+ * Thème « Hibou » : indigo de nuit + ambre.
+ * Clair : fond crème, cartes blanches. Sombre : bleu nuit (suit le réglage du téléphone).
+ * Revenus = vert (success), dépenses = rouge (danger), emprunts = ambre (secondary).
+ */
+:root {
+  --ion-color-primary: #3f3d9e;
+  --ion-color-primary-rgb: 63,61,158;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255,255,255;
+  --ion-color-primary-shade: #37368b;
+  --ion-color-primary-tint: #5250a8;
+  --ion-color-secondary: #f2a93b;
+  --ion-color-secondary-rgb: 242,169,59;
+  --ion-color-secondary-contrast: #1b1b2f;
+  --ion-color-secondary-contrast-rgb: 27,27,47;
+  --ion-color-secondary-shade: #d59534;
+  --ion-color-secondary-tint: #f3b24f;
+  --ion-color-success: #2e9e6b;
+  --ion-color-success-rgb: 46,158,107;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255,255,255;
+  --ion-color-success-shade: #288b5e;
+  --ion-color-success-tint: #43a87a;
+  --ion-color-danger: #d8504a;
+  --ion-color-danger-rgb: 216,80,74;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255,255,255;
+  --ion-color-danger-shade: #be4641;
+  --ion-color-danger-tint: #dc625c;
+  --ion-background-color: #f6f4ef;
+  --ion-background-color-rgb: 246,244,239;
+  --ion-text-color: #1d1b2f;
+  --ion-text-color-rgb: 29,27,47;
+  --ion-item-background: #ffffff;
+  --ion-card-background: #ffffff;
+  --ion-toolbar-background: #f6f4ef;
+  --ion-tab-bar-background: #ffffff;
+  --ion-border-color: rgba(29, 27, 47, 0.1);
+  --ion-font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ion-color-primary: #9a98f5;
+    --ion-color-primary-rgb: 154,152,245;
+    --ion-color-primary-contrast: #101022;
+    --ion-color-primary-contrast-rgb: 16,16,34;
+    --ion-color-primary-shade: #8886d8;
+    --ion-color-primary-tint: #a4a2f6;
+    --ion-color-secondary: #f2a93b;
+    --ion-color-secondary-rgb: 242,169,59;
+    --ion-color-secondary-contrast: #1b1b2f;
+    --ion-color-secondary-contrast-rgb: 27,27,47;
+    --ion-color-secondary-shade: #d59534;
+    --ion-color-secondary-tint: #f3b24f;
+    --ion-color-success: #4cc38a;
+    --ion-color-success-rgb: 76,195,138;
+    --ion-color-success-contrast: #07210f;
+    --ion-color-success-contrast-rgb: 7,33,15;
+    --ion-color-success-shade: #43ac79;
+    --ion-color-success-tint: #5ec996;
+    --ion-color-danger: #ff7a72;
+    --ion-color-danger-rgb: 255,122,114;
+    --ion-color-danger-contrast: #2b0907;
+    --ion-color-danger-contrast-rgb: 43,9,7;
+    --ion-color-danger-shade: #e06b64;
+    --ion-color-danger-tint: #ff8780;
+    --ion-background-color: #0e1126;
+    --ion-background-color-rgb: 14,17,38;
+    --ion-text-color: #edeaf7;
+    --ion-text-color-rgb: 237,234,247;
+    --ion-item-background: #171b38;
+    --ion-card-background: #171b38;
+    --ion-toolbar-background: #0e1126;
+    --ion-tab-bar-background: #121630;
+    --ion-border-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+ion-header::after { display: none; }
+
+ion-toolbar {
+  --background: var(--ion-toolbar-background);
+  --border-width: 0;
+}
+
+ion-title { font-weight: 700; }
+
+ion-tab-bar {
+  --background: var(--ion-tab-bar-background);
+  --color-selected: var(--ion-color-primary);
+  --border: none;
+  box-shadow: 0 -2px 14px rgba(0, 0, 0, 0.07);
+}
+
+ion-fab-button {
+  --box-shadow: 0 6px 16px rgba(var(--ion-color-secondary-rgb), 0.4);
+}
+
+ion-list[inset] {
+  border-radius: 16px;
+}

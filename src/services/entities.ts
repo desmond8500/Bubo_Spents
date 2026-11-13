@@ -20,6 +20,8 @@ export interface Row {
 
 export type Lookup = (key: EntityKey, uuid: string | null | undefined) => Row | undefined
 
+export type Tone = 'success' | 'danger' | 'secondary' | 'medium'
+
 export interface EntityDef {
   key: EntityKey
   title: string
@@ -27,6 +29,9 @@ export interface EntityDef {
   label: (row: Row, lookup: Lookup) => string
   subtitle?: (row: Row, lookup: Lookup) => string
   image?: (row: Row) => string | null
+  /** Montant affiché à droite de la ligne, coloré selon `tone`. */
+  amount?: (row: Row) => number
+  tone?: Tone
 }
 
 export const fmt = (n: unknown) => {
@@ -47,7 +52,9 @@ export const entities: EntityDef[] = [
       { key: 'date', label: 'Date', type: 'date', required: true },
     ],
     label: (r, lookup) => lookup('articles', r.article_uuid)?.nom ?? 'Article supprimé',
-    subtitle: (r) => join(r.date, fmt(r.montant), Number(r.quantite) !== 1 && `x${r.quantite}`),
+    subtitle: (r) => join(r.date, Number(r.quantite) !== 1 && `x${r.quantite}`),
+    amount: (r) => Number(r.montant),
+    tone: 'danger',
   },
   {
     key: 'revenus',
@@ -58,7 +65,9 @@ export const entities: EntityDef[] = [
       { key: 'date', label: 'Date', type: 'date', required: true },
     ],
     label: (r) => r.description,
-    subtitle: (r) => join(r.date, fmt(r.montant)),
+    subtitle: (r) => r.date ?? '',
+    amount: (r) => Number(r.montant),
+    tone: 'success',
   },
   {
     key: 'emprunts',
@@ -69,7 +78,9 @@ export const entities: EntityDef[] = [
       { key: 'date', label: 'Date', type: 'date', required: true },
     ],
     label: (r) => r.description,
-    subtitle: (r) => join(r.date, fmt(r.montant)),
+    subtitle: (r) => r.date ?? '',
+    amount: (r) => Number(r.montant),
+    tone: 'secondary',
   },
   {
     key: 'articles',
@@ -84,8 +95,10 @@ export const entities: EntityDef[] = [
     ],
     label: (r) => r.nom,
     subtitle: (r, lookup) =>
-      join(fmt(r.prix), lookup('marques', r.marque_uuid)?.nom, lookup('fournisseurs', r.fournisseur_uuid)?.nom),
+      join(lookup('marques', r.marque_uuid)?.nom, lookup('fournisseurs', r.fournisseur_uuid)?.nom),
     image: (r) => r.images?.[0] ?? null,
+    amount: (r) => Number(r.prix),
+    tone: 'medium',
   },
   {
     key: 'marques',
