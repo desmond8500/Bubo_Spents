@@ -1,3 +1,4 @@
+import { peopleOutline, personOutline } from 'ionicons/icons'
 import { settings } from './settings'
 
 export type EntityKey =
@@ -32,6 +33,10 @@ export type Tone = 'success' | 'danger' | 'secondary' | 'medium'
 export interface EntityDef {
   key: EntityKey
   title: string
+  /** Donnée commune : visible par tous les utilisateurs (sinon privée). */
+  shared?: boolean
+  /** Distingue visuellement le type de dépense (icône colorée + libellé). */
+  kind?: { label: string; icon: string; tone: 'primary' | 'secondary' }
   fields: Field[]
   label: (row: Row, lookup: Lookup) => string
   subtitle?: (row: Row, lookup: Lookup) => string
@@ -51,7 +56,9 @@ const join = (...parts: Array<string | null | undefined | false>) => parts.filte
 export const entities: EntityDef[] = [
   {
     key: 'depenses',
-    title: 'Dépenses',
+    title: 'Dépenses générales',
+    shared: true,
+    kind: { label: 'Générale', icon: peopleOutline, tone: 'primary' },
     fields: [
       { key: 'article_uuid', label: 'Article', type: 'ref', ref: 'articles', required: true },
       { key: 'quantite', label: 'Quantité', type: 'number', required: true, default: 1 },
@@ -66,6 +73,7 @@ export const entities: EntityDef[] = [
   {
     key: 'depenses_personnelles',
     title: 'Dépenses perso',
+    kind: { label: 'Perso', icon: personOutline, tone: 'secondary' },
     fields: [
       { key: 'designation', label: 'Désignation', type: 'text', required: true },
       { key: 'quantite', label: 'Quantité', type: 'number', required: true, default: 1 },
@@ -106,6 +114,7 @@ export const entities: EntityDef[] = [
   {
     key: 'articles',
     title: 'Articles',
+    shared: true,
     fields: [
       { key: 'nom', label: 'Nom', type: 'text', required: true },
       { key: 'prix', label: 'Prix', type: 'number', required: true },
@@ -124,6 +133,7 @@ export const entities: EntityDef[] = [
   {
     key: 'marques',
     title: 'Marques',
+    shared: true,
     fields: [
       { key: 'nom', label: 'Nom', type: 'text', required: true },
       { key: 'description', label: 'Description', type: 'textarea' },
@@ -136,6 +146,7 @@ export const entities: EntityDef[] = [
   {
     key: 'fournisseurs',
     title: 'Fournisseurs',
+    shared: true,
     fields: [
       { key: 'nom', label: 'Nom', type: 'text', required: true },
       { key: 'description', label: 'Description', type: 'textarea' },

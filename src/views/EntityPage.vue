@@ -14,7 +14,7 @@
       </ion-toolbar>
       <ion-toolbar v-if="isDepense">
         <ion-segment :value="entity" @ion-change="onSegment">
-          <ion-segment-button value="depenses"><ion-label>Articles</ion-label></ion-segment-button>
+          <ion-segment-button value="depenses"><ion-label>Générales</ion-label></ion-segment-button>
           <ion-segment-button value="depenses_personnelles"><ion-label>Personnelles</ion-label></ion-segment-button>
         </ion-segment>
       </ion-toolbar>
@@ -30,10 +30,13 @@
 
       <ion-list v-if="rows.length" inset>
         <ion-item-sliding v-for="row in rows" :key="row.uuid">
-          <ion-item button :detail="false" @click="openForm(row)">
+          <ion-item button :detail="false" @click="canEdit(entity, row) && openForm(row)">
             <div v-if="def.image" slot="start" class="avatar">
               <img v-if="thumb(row)" :src="thumb(row)!" alt="" />
               <span v-else>{{ initial(row) }}</span>
+            </div>
+            <div v-else-if="def.kind" slot="start" class="avatar kind" :class="def.kind?.tone">
+              <ion-icon :icon="def.kind?.icon" />
             </div>
             <ion-label>
               <h2>{{ def.label(row, lookup) }}</h2>
@@ -44,7 +47,7 @@
               <ion-icon class="sync" :icon="row.synced ? cloudDoneOutline : cloudOfflineOutline" />
             </div>
           </ion-item>
-          <ion-item-options side="end">
+          <ion-item-options v-if="canEdit(entity, row)" side="end">
             <ion-item-option color="danger" @click="confirmRemove(row)">
               <ion-icon slot="icon-only" :icon="trashOutline" />
             </ion-item-option>
@@ -57,7 +60,11 @@
         <p>Rien pour l'instant.<br />Appuyez sur + pour ajouter.</p>
       </div>
 
-      <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+      <ion-note v-if="!canCreate(entity)" class="ion-padding ion-text-center" style="display: block">
+        Votre rôle (lecteur) permet seulement de consulter les données communes.
+      </ion-note>
+
+      <ion-fab v-if="canCreate(entity)" slot="fixed" vertical="bottom" horizontal="end">
         <ion-fab-button color="secondary" @click="openForm()">
           <ion-icon :icon="addOutline" />
         </ion-fab-button>
@@ -130,6 +137,7 @@ import { addOutline, syncOutline, cloudDoneOutline, cloudOfflineOutline, trashOu
 import ImagePicker from '../components/ImagePicker.vue'
 import { entityByKey, fmt, type EntityKey, type Row } from '../services/entities'
 import { state, lookup, add, update, remove, visible, sync, pendingCount } from '../services/store'
+import { canCreate, canEdit, isMine } from '../services/permissions'
 
 const props = defineProps<{ entity: EntityKey }>()
 
@@ -148,7 +156,12 @@ function onSegment(ev: CustomEvent) {
 }
 
 const thumb = (row: Row) => def.value.image?.(row) ?? null
-const subtitle = (row: Row) => def.value.subtitle?.(row, lookup) ?? ''
+/** Type de dépense, détail, et auteur quand la ligne commune vient de quelqu'un d'autre. */
+const subtitle = (row: Row) => {
+  const parts = [def.value.kind?.label, def.value.subtitle?.(row, lookup) ?? '']
+  if (def.value.shared && !isMine(row) && row.auteur?.name) parts.push(`par ${row.auteur.name}`)
+  return parts.filter(Boolean).join(' · ')
+}
 const amount = (row: Row) => (def.value.amount ? def.value.amount(row) : null)
 const initial = (row: Row) => (def.value.label(row, lookup).trim().charAt(0) || '?').toUpperCase()
 
@@ -233,6 +246,13 @@ async function confirmRemove(row: Row) {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+.avatar.kind {
+  font-size: 22px;
+}
+.avatar.kind.secondary {
+  color: var(--ion-color-secondary-shade);
+  background: rgba(var(--ion-color-secondary-rgb), 0.2);
 }
 .end {
   display: flex;

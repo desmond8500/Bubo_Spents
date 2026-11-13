@@ -1,7 +1,8 @@
 import { reactive } from 'vue'
 import { Preferences } from '@capacitor/preferences'
 import { api } from './api'
-import { entities, type EntityKey, type Lookup, type Row } from './entities'
+import { entities, entityByKey, type EntityKey, type Lookup, type Row } from './entities'
+import { session, setSession } from './session'
 
 type State = Record<EntityKey, Row[]> & {
   syncing: boolean
@@ -50,8 +51,15 @@ const newUuid = () =>
       })
 
 export async function add(key: EntityKey, data: Record<string, any>) {
+  // Donnée commune : on garde son auteur dès la création (le serveur confirmera à la synchro).
+  const auteur =
+    entityByKey(key).shared && session.user
+      ? { user_id: session.user.id, auteur: { id: session.user.id, name: session.user.name } }
+      : {}
+
   state[key].unshift({
     ...data,
+    ...auteur,
     uuid: newUuid(),
     synced: false,
     updated_at: new Date().toISOString(),
@@ -107,13 +115,20 @@ export async function sync() {
     for (const e of entities) {
       payload[e.key] = state[e.key]
         .filter((r) => !r.synced)
-        .map(({ synced, server, ...row }) => row)
+        .map(({ synced, server, auteur, ...row }) => row)
     }
     const { data } = await api.post('/sync', payload)
     for (const e of entities) {
       state[e.key] = (data[e.key] as Row[]).map((r) => ({ ...r, synced: true, server: true }))
       await persist(e.key)
     }
+    // Le serveur renvoie le rôle à jour et le nombre d'écritures refusées faute de droits.
+    if (data.moi && session.token) await setSession(session.token, data.moi)
+    const refuses = Object.values(data.refuses ?? {}).reduce((n: number, v) => n + Number(v), 0)
+    if (refuses > 0) {
+      state.error = `${refuses} modification(s) refusée(s) : droits insuffisants sur des données communes.`
+    }
+
     state.lastSync = new Date().toISOString()
     await Preferences.set({ key: 'bubo_spents_last_sync', value: state.lastSync })
   } catch (err: any) {

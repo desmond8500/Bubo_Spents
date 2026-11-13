@@ -14,6 +14,8 @@ const routes: RouteRecordRaw[] = [
   { path: '/', redirect: '/tabs/resume' },
   { path: '/login', component: () => import('../views/LoginPage.vue'), meta: { public: true } },
   { path: '/settings', component: () => import('../views/SettingsPage.vue') },
+  { path: '/settings/users', component: () => import('../views/UsersPage.vue'), meta: { admin: true } },
+  { path: '/settings/journal', component: () => import('../views/JournalPage.vue'), meta: { admin: true } },
   {
     path: '/tabs/',
     component: TabsPage,
@@ -41,6 +43,7 @@ router.beforeEach(async (to) => {
   await sessionReady
   if (!to.meta.public && !session.token) return '/login'
   if (to.path === '/login' && session.token) return '/tabs/resume'
+  if (to.meta.admin && (session.user?.role ?? 'membre') !== 'admin') return '/tabs/resume'
 })
 
 export default router

@@ -31,7 +31,7 @@ Application de gestion de dépenses. L'idée c'est de pouvoir noter les dépense
   - quantite
   - montant
   - Date
-- depenses_personelles
+- depenses_personnelles
   - user_id
   - designation
   - quantite
@@ -69,5 +69,13 @@ Application de gestion de dépenses. L'idée c'est de pouvoir noter les dépense
 
 ## user
 
-- [] Chaque utilisateur ne doit voir que ses emprunts
-- [] Chaque utilisateur ne doit voir que ses revenus
+- [x] Chaque utilisateur ne doit voir que ses emprunts
+- [x] Chaque utilisateur ne doit voir que ses revenus
+- [x] Dépenses personnelles privées, séparées des dépenses générales (visibles par tous)
+- [x] Type de dépense distingué (icône et couleur : indigo = générale, ambre = perso)
+
+## Rôles et journal
+
+- [x] Rôles : admin, membre, lecteur (droits sur les données communes)
+- [x] Gestion des rôles par l'administrateur
+- [x] Journal d'activité consultable par l'administrateur

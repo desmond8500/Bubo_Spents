@@ -1,10 +1,19 @@
 import { reactive } from 'vue'
 import { Preferences } from '@capacitor/preferences'
 
+export type Role = 'admin' | 'membre' | 'lecteur'
+
+export const roleLabel: Record<Role, string> = {
+  admin: 'Administrateur',
+  membre: 'Membre',
+  lecteur: 'Lecteur',
+}
+
 export interface User {
   id: number
   name: string
   email: string
+  role: Role
 }
 
 const KEY = 'bubo_spents_session'

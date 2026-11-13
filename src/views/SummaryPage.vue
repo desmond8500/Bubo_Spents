@@ -23,7 +23,7 @@
           </ion-button>
         </div>
 
-        <div class="solde-label">Solde du mois</div>
+        <div class="solde-label">Votre solde du mois</div>
         <div class="solde" :class="{ negative: solde < 0 }">{{ fmt(solde) }}</div>
 
         <div class="chips">
@@ -32,8 +32,8 @@
             <strong class="in">{{ fmt(totals.revenus) }}</strong>
           </div>
           <div class="chip">
-            <span>Dépenses</span>
-            <strong class="out">{{ fmt(totals.depenses) }}</strong>
+            <span>Vos dépenses</span>
+            <strong class="out">{{ fmt(totals.mesDepenses) }}</strong>
           </div>
           <div class="chip">
             <span>Emprunts</span>
@@ -42,9 +42,52 @@
         </div>
       </section>
 
+      <ion-list inset>
+        <ion-list-header>
+          <ion-label>Vos dépenses</ion-label>
+        </ion-list-header>
+        <ion-item>
+          <div slot="start" class="dot primary"><ion-icon :icon="peopleOutline" /></div>
+          <ion-label>
+            <h3>Générales saisies par vous</h3>
+            <p>Comptées dans votre solde</p>
+          </ion-label>
+          <ion-note slot="end" class="total">{{ fmt(totals.generalesSaisies) }}</ion-note>
+        </ion-item>
+        <ion-item>
+          <div slot="start" class="dot secondary"><ion-icon :icon="personOutline" /></div>
+          <ion-label>
+            <h3>Personnelles</h3>
+            <p>Visibles par vous seul</p>
+          </ion-label>
+          <ion-note slot="end" class="total">{{ fmt(totals.perso) }}</ion-note>
+        </ion-item>
+      </ion-list>
+
+      <ion-list inset>
+        <ion-list-header>
+          <ion-label>Dépenses générales (visibles par tous)</ion-label>
+        </ion-list-header>
+        <ion-item>
+          <div slot="start" class="dot primary"><ion-icon :icon="peopleOutline" /></div>
+          <ion-label>
+            <h3>Total du mois</h3>
+            <p>{{ generales.length }} dépense(s)</p>
+          </ion-label>
+          <ion-note slot="end" class="total">{{ fmt(totals.generalesTous) }}</ion-note>
+        </ion-item>
+        <ion-item v-for="p in parPersonne" :key="p.key">
+          <ion-label>
+            <h3>{{ p.name }}</h3>
+            <ion-progress-bar :value="p.total / parPersonne[0].total" color="primary" class="bar" />
+          </ion-label>
+          <ion-note slot="end" class="total">{{ fmt(p.total) }}</ion-note>
+        </ion-item>
+      </ion-list>
+
       <ion-list v-if="byPoste.length" inset>
         <ion-list-header>
-          <ion-label>Dépenses par poste</ion-label>
+          <ion-label>Vos dépenses par poste</ion-label>
         </ion-list-header>
         <ion-item v-for="a in byPoste" :key="a.key">
           <ion-label>
@@ -56,7 +99,7 @@
       </ion-list>
       <div v-else class="empty">
         <ion-icon :icon="moonOutline" />
-        <p>Aucune dépense ce mois-ci.</p>
+        <p>Aucune dépense de votre part ce mois-ci.</p>
       </div>
     </ion-content>
   </ion-page>
@@ -68,8 +111,12 @@ import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonIcon, IonList,
   IonListHeader, IonItem, IonLabel, IonNote, IonProgressBar,
 } from '@ionic/vue'
-import { chevronBack, chevronForward, moonOutline, settingsOutline } from 'ionicons/icons'
+import {
+  chevronBack, chevronForward, moonOutline, peopleOutline, personOutline, settingsOutline,
+} from 'ionicons/icons'
 import { fmt, type EntityKey, type Row } from '../services/entities'
+import { isMine } from '../services/permissions'
+import { session } from '../services/session'
 import { lookup, visible } from '../services/store'
 
 const keyOf = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
@@ -91,14 +138,42 @@ function shift(delta: number) {
 const inMonth = (key: EntityKey) => visible(key).filter((r) => String(r.date ?? '').startsWith(month.value))
 const sum = (rows: Row[]) => rows.reduce((s, r) => s + (Number(r.montant) || 0), 0)
 
-const totals = computed(() => ({
-  revenus: sum(inMonth('revenus')),
-  depenses: sum(inMonth('depenses')) + sum(inMonth('depenses_personnelles')),
-  emprunts: sum(inMonth('emprunts')),
-}))
+/** Dépenses générales : celles de tous les utilisateurs (données communes). */
+const generales = computed(() => inMonth('depenses'))
+const generalesSaisies = computed(() => generales.value.filter(isMine))
+const personnelles = computed(() => inMonth('depenses_personnelles'))
 
-const solde = computed(() => totals.value.revenus - totals.value.depenses)
+const totals = computed(() => {
+  const perso = sum(personnelles.value)
+  const saisies = sum(generalesSaisies.value)
+  return {
+    revenus: sum(inMonth('revenus')),
+    emprunts: sum(inMonth('emprunts')),
+    perso,
+    generalesSaisies: saisies,
+    generalesTous: sum(generales.value),
+    // Votre solde ne compte que ce que vous avez dépensé : vos dépenses personnelles et les générales que vous avez saisies.
+    mesDepenses: perso + saisies,
+  }
+})
 
+const solde = computed(() => totals.value.revenus - totals.value.mesDepenses)
+
+/** Dépenses générales regroupées par personne qui les a saisies. */
+const parPersonne = computed(() => {
+  const groups = new Map<string, { key: string; name: string; total: number }>()
+  for (const d of generales.value) {
+    const mine = isMine(d)
+    const key = mine ? 'moi' : String(d.user_id ?? d.auteur?.name ?? '?')
+    const name = mine ? `${session.user?.name ?? 'Vous'} (vous)` : (d.auteur?.name ?? 'Inconnu')
+    const g = groups.get(key) ?? { key, name, total: 0 }
+    g.total += Number(d.montant) || 0
+    groups.set(key, g)
+  }
+  return [...groups.values()].sort((a, b) => b.total - a.total)
+})
+
+/** Vos dépenses (générales saisies par vous + personnelles), regroupées par article ou désignation. */
 const byPoste = computed(() => {
   const groups = new Map<string, { key: string; name: string; total: number }>()
   const add = (key: string, name: string, amount: unknown) => {
@@ -107,11 +182,11 @@ const byPoste = computed(() => {
     groups.set(key, g)
   }
 
-  for (const d of inMonth('depenses')) {
+  for (const d of generalesSaisies.value) {
     add(`a:${d.article_uuid}`, lookup('articles', d.article_uuid)?.nom ?? 'Article supprimé', d.montant)
   }
   // Les dépenses personnelles sont regroupées par désignation (sans tenir compte de la casse).
-  for (const p of inMonth('depenses_personnelles')) {
+  for (const p of personnelles.value) {
     const name = String(p.designation ?? '').trim() || 'Sans désignation'
     add(`p:${name.toLowerCase()}`, name, p.montant)
   }
@@ -181,6 +256,24 @@ const byPoste = computed(() => {
 }
 .chip .loan {
   color: #ffd27d;
+}
+/* Même code couleur que les listes : indigo = dépense générale, ambre = dépense personnelle. */
+.dot {
+  width: 36px;
+  height: 36px;
+  margin-inline-end: 12px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+}
+.dot.primary {
+  color: var(--ion-color-primary);
+  background: rgba(var(--ion-color-primary-rgb), 0.14);
+}
+.dot.secondary {
+  color: var(--ion-color-secondary-shade);
+  background: rgba(var(--ion-color-secondary-rgb), 0.2);
 }
 .bar {
   margin-top: 8px;

@@ -16,11 +16,24 @@
           <ion-label>
             <h3>{{ session.user?.name }}</h3>
             <p>{{ session.user?.email }}</p>
+            <p>{{ roleLabel[session.user?.role ?? 'membre'] }}</p>
           </ion-label>
         </ion-item>
         <ion-item button :detail="false" @click="confirmLogout">
           <ion-icon slot="start" :icon="logOutOutline" />
           <ion-label>Se déconnecter</ion-label>
+        </ion-item>
+      </ion-list>
+
+      <ion-list v-if="isAdmin()" inset>
+        <ion-list-header><ion-label>Administration</ion-label></ion-list-header>
+        <ion-item button router-link="/settings/users" detail>
+          <ion-icon slot="start" :icon="peopleOutline" />
+          <ion-label>Utilisateurs et rôles</ion-label>
+        </ion-item>
+        <ion-item button router-link="/settings/journal" detail>
+          <ion-icon slot="start" :icon="listOutline" />
+          <ion-label>Journal d'activité</ion-label>
         </ion-item>
       </ion-list>
 
@@ -94,11 +107,12 @@ import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton, IonContent, IonList,
   IonListHeader, IonItem, IonLabel, IonInput, IonIcon, IonNote, alertController, toastController,
 } from '@ionic/vue'
-import { logOutOutline, syncOutline, trashOutline, wifiOutline } from 'ionicons/icons'
+import { listOutline, logOutOutline, peopleOutline, syncOutline, trashOutline, wifiOutline } from 'ionicons/icons'
 import { useRouter } from 'vue-router'
 import { api } from '../services/api'
 import { logout } from '../services/auth'
-import { session } from '../services/session'
+import { roleLabel, session } from '../services/session'
+import { isAdmin } from '../services/permissions'
 import { DEFAULT_API_URL, settings } from '../services/settings'
 import { clearLocal, pendingCount, state, sync } from '../services/store'
 
