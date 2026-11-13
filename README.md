@@ -8,7 +8,7 @@ du repo [Bubo_Server](https://github.com/desmond8500/Bubo_Server).
 
 ```bash
 npm install
-cp .env.example .env   # adapter VITE_API_URL
+cp .env.example .env   # optionnel : VITE_API_URL pour viser un autre serveur (par défaut https://buboserver.yonkou.info/api)
 npm run dev
 ```
 
