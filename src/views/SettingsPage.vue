@@ -11,6 +11,20 @@
 
     <ion-content>
       <ion-list inset>
+        <ion-list-header><ion-label>Compte</ion-label></ion-list-header>
+        <ion-item>
+          <ion-label>
+            <h3>{{ session.user?.name }}</h3>
+            <p>{{ session.user?.email }}</p>
+          </ion-label>
+        </ion-item>
+        <ion-item button :detail="false" @click="confirmLogout">
+          <ion-icon slot="start" :icon="logOutOutline" />
+          <ion-label>Se déconnecter</ion-label>
+        </ion-item>
+      </ion-list>
+
+      <ion-list inset>
         <ion-list-header><ion-label>Serveur</ion-label></ion-list-header>
         <ion-item>
           <ion-input
@@ -80,12 +94,39 @@ import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton, IonContent, IonList,
   IonListHeader, IonItem, IonLabel, IonInput, IonIcon, IonNote, alertController, toastController,
 } from '@ionic/vue'
-import { syncOutline, trashOutline, wifiOutline } from 'ionicons/icons'
+import { logOutOutline, syncOutline, trashOutline, wifiOutline } from 'ionicons/icons'
+import { useRouter } from 'vue-router'
 import { api } from '../services/api'
+import { logout } from '../services/auth'
+import { session } from '../services/session'
 import { DEFAULT_API_URL, settings } from '../services/settings'
 import { clearLocal, pendingCount, state, sync } from '../services/store'
 
+const router = useRouter()
 const testing = ref(false)
+
+async function confirmLogout() {
+  const pending = pendingCount()
+  const alert = await alertController.create({
+    header: 'Se déconnecter ?',
+    message:
+      pending > 0
+        ? `${pending} élément(s) ne sont pas encore synchronisés. Ils restent sur cet appareil et seront envoyés à la prochaine connexion avec le même compte.`
+        : 'Vos données restent disponibles sur le serveur.',
+    buttons: [
+      { text: 'Annuler', role: 'cancel' },
+      {
+        text: 'Se déconnecter',
+        role: 'destructive',
+        handler: async () => {
+          await logout()
+          router.replace('/login')
+        },
+      },
+    ],
+  })
+  await alert.present()
+}
 
 const lastSync = computed(() =>
   state.lastSync ? new Date(state.lastSync).toLocaleString('fr-FR') : 'Jamais',

@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from '@ionic/vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import TabsPage from '../views/TabsPage.vue'
 import type { EntityKey } from '../services/entities'
+import { session, sessionReady } from '../services/session'
 
 const entityRoute = (path: string, entity: EntityKey): RouteRecordRaw => ({
   path,
@@ -11,6 +12,7 @@ const entityRoute = (path: string, entity: EntityKey): RouteRecordRaw => ({
 
 const routes: RouteRecordRaw[] = [
   { path: '/', redirect: '/tabs/resume' },
+  { path: '/login', component: () => import('../views/LoginPage.vue'), meta: { public: true } },
   { path: '/settings', component: () => import('../views/SettingsPage.vue') },
   {
     path: '/tabs/',
@@ -29,7 +31,15 @@ const routes: RouteRecordRaw[] = [
   },
 ]
 
-export default createRouter({
+const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 })
+
+router.beforeEach(async (to) => {
+  await sessionReady
+  if (!to.meta.public && !session.token) return '/login'
+  if (to.path === '/login' && session.token) return '/tabs/resume'
+})
+
+export default router
