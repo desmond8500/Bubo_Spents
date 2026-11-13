@@ -24,7 +24,7 @@
 
       <ion-list v-if="rows.length" inset>
         <ion-item-sliding v-for="row in rows" :key="row.uuid">
-          <ion-item button detail="false" @click="openForm(row)">
+          <ion-item button :detail="false" @click="openForm(row)">
             <div v-if="def.image" slot="start" class="avatar">
               <img v-if="thumb(row)" :src="thumb(row)!" alt="" />
               <span v-else>{{ initial(row) }}</span>
