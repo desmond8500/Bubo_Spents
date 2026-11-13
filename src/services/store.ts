@@ -73,6 +73,17 @@ export async function remove(key: EntityKey, uuid: string) {
   await persist(key)
 }
 
+/** Efface toutes les données locales (celles déjà synchronisées pourront être récupérées depuis le serveur). */
+export async function clearLocal() {
+  for (const e of entities) {
+    state[e.key] = []
+    await Preferences.remove({ key: storageKey(e.key) })
+  }
+  state.lastSync = null
+  state.error = null
+  await Preferences.remove({ key: 'bubo_spents_last_sync' })
+}
+
 export const pendingCount = () =>
   entities.reduce((n, e) => n + state[e.key].filter((r) => !r.synced).length, 0)
 
