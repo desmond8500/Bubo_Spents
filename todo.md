@@ -2,7 +2,8 @@
 
 ## Description
 
-Application de gestion de dépenses. L'idée c'est de pouvoir noter les dépenses quotidiennes sur l'application ou via web avec la possibilité d'avoir une sauvegarde locale et de synchroniser les données sur un serveur en ligne.
+Application de gestion de dépenses. L'idée c'est de pouvoir noter les dépenses quotidiennes sur l'application ou via web avec la possibilité d'avoir une sauvegarde locale et de synchroniser les données sur un serveur en ligne.  
+L'un des utilisateur doit pouvoir définir un solde de départ qui fera office de budget mensuel.
 
 ## Technologies
 
@@ -49,35 +50,17 @@ Application de gestion de dépenses. L'idée c'est de pouvoir noter les dépense
   - description
   - montant
   - date
+  - rembousé
+  - date_remboursement
 - Categories
   - nom
   - description
-
-## Taches
-
-- [x] Se connecter aux répos bubo_spents et bubo_server
-- [x] créer les projets ionic et laravel dans les projets respectifs
-- [x] Connecter l'application au serveur
-- [ ] developper et pusher l'application pas à pas
-
-## Pages
-
-- [x] Paramètre
-- [x] Résumé mensuel
-- [x] authentification
 
 ## Design
 
 - [] améliorer l'interface
 - [x] créer un logo
 - [x] splash screen
-
-## user
-
-- [x] Chaque utilisateur ne doit voir que ses emprunts
-- [x] Chaque utilisateur ne doit voir que ses revenus
-- [x] Dépenses personnelles privées, séparées des dépenses générales (visibles par tous)
-- [x] Type de dépense distingué (icône et couleur : indigo = générale, ambre = perso)
 
 ## Rôles et journal
 
@@ -88,3 +71,39 @@ Application de gestion de dépenses. L'idée c'est de pouvoir noter les dépense
 ## Fonctionalités
 
 - [] PWA
+- [] Ajouter une table budget
+  - [] il pourra etre crédité au fur et à mesure par un utilisateur
+  - [] il sera visible par tous les utilisateurs
+  - [] le solde de chaque mois sera reporté sur le budget du mois suivant
+- [] Ajouter le mode de paiement aux depenes, revenus, emprunts,
+  - orange money
+  - wave
+  - espèce
+  - transfert bancaire
+  - chèque
+- [] Formulaire de recherche pour :
+  - les fournisseurs
+  - les marques
+  - les articles
+- [] Synchronisation automtique toutes les 8h
+- [] Pouvoir ajouter un nouvel article à partir de la page d'ajout d'une nouvelle dépense
+- [] bouton pour dupliquer un article
+
+## Prets
+
+- [] gérer le rembousement de pret
+
+## Importation
+
+- [] Gérer l'importation 
+  - des marques
+  - des articles
+  - des fournisseurs
+
+## API
+
+Faire des APIs pour télécharger :
+
+- des marques
+- des articles
+- des fournisseurs
