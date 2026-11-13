@@ -27,11 +27,13 @@ Application de gestion de dépenses. L'idée c'est de pouvoir noter les dépense
   - description
 - depenses
   - article_id
+  - categorie_id
   - user_id
   - quantite
   - montant
   - Date
 - depenses_personnelles
+  - categorie_id
   - user_id
   - designation
   - quantite
@@ -47,6 +49,9 @@ Application de gestion de dépenses. L'idée c'est de pouvoir noter les dépense
   - description
   - montant
   - date
+- Categories
+  - nom
+  - description
 
 ## Taches
 
