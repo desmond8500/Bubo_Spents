@@ -58,7 +58,7 @@ L'un des utilisateur doit pouvoir définir un solde de départ qui fera office d
 
 ## Design
 
-- [] améliorer l'interface
+- [x] améliorer l'interface
 - [x] créer un logo
 - [x] splash screen
 
