@@ -64,8 +64,8 @@ Application de gestion de dépenses. L'idée c'est de pouvoir noter les dépense
 ## Design
 
 - [] améliorer l'interface
-- [] créer un logo
-- [] splash screen
+- [x] créer un logo
+- [x] splash screen
 
 ## user
 
