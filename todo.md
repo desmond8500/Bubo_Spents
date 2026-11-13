@@ -79,3 +79,8 @@ Application de gestion de dépenses. L'idée c'est de pouvoir noter les dépense
 - [x] Rôles : admin, membre, lecteur (droits sur les données communes)
 - [x] Gestion des rôles par l'administrateur
 - [x] Journal d'activité consultable par l'administrateur
+
+
+# Fonctionalités
+
+- [] PWA
