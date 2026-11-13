@@ -69,7 +69,7 @@ import {
   IonListHeader, IonItem, IonLabel, IonNote, IonProgressBar,
 } from '@ionic/vue'
 import { chevronBack, chevronForward, moonOutline, settingsOutline } from 'ionicons/icons'
-import { fmt, type EntityKey } from '../services/entities'
+import { fmt, type EntityKey, type Row } from '../services/entities'
 import { lookup, visible } from '../services/store'
 
 const keyOf = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
@@ -89,7 +89,7 @@ function shift(delta: number) {
 }
 
 const inMonth = (key: EntityKey) => visible(key).filter((r) => String(r.date ?? '').startsWith(month.value))
-const sum = (rows: Array<{ montant?: unknown }>) => rows.reduce((s, r) => s + (Number(r.montant) || 0), 0)
+const sum = (rows: Row[]) => rows.reduce((s, r) => s + (Number(r.montant) || 0), 0)
 
 const totals = computed(() => ({
   revenus: sum(inMonth('revenus')),
