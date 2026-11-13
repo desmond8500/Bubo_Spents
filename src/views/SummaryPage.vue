@@ -42,14 +42,14 @@
         </div>
       </section>
 
-      <ion-list v-if="byArticle.length" inset>
+      <ion-list v-if="byPoste.length" inset>
         <ion-list-header>
-          <ion-label>Dépenses par article</ion-label>
+          <ion-label>Dépenses par poste</ion-label>
         </ion-list-header>
-        <ion-item v-for="a in byArticle" :key="a.key">
+        <ion-item v-for="a in byPoste" :key="a.key">
           <ion-label>
             <h3>{{ a.name }}</h3>
-            <ion-progress-bar :value="a.total / byArticle[0].total" color="danger" class="bar" />
+            <ion-progress-bar :value="a.total / byPoste[0].total" color="danger" class="bar" />
           </ion-label>
           <ion-note slot="end" class="total">{{ fmt(a.total) }}</ion-note>
         </ion-item>
@@ -93,23 +93,29 @@ const sum = (rows: Row[]) => rows.reduce((s, r) => s + (Number(r.montant) || 0),
 
 const totals = computed(() => ({
   revenus: sum(inMonth('revenus')),
-  depenses: sum(inMonth('depenses')),
+  depenses: sum(inMonth('depenses')) + sum(inMonth('depenses_personnelles')),
   emprunts: sum(inMonth('emprunts')),
 }))
 
 const solde = computed(() => totals.value.revenus - totals.value.depenses)
 
-const byArticle = computed(() => {
+const byPoste = computed(() => {
   const groups = new Map<string, { key: string; name: string; total: number }>()
-  for (const d of inMonth('depenses')) {
-    const g = groups.get(d.article_uuid) ?? {
-      key: d.article_uuid,
-      name: lookup('articles', d.article_uuid)?.nom ?? 'Article supprimé',
-      total: 0,
-    }
-    g.total += Number(d.montant) || 0
-    groups.set(d.article_uuid, g)
+  const add = (key: string, name: string, amount: unknown) => {
+    const g = groups.get(key) ?? { key, name, total: 0 }
+    g.total += Number(amount) || 0
+    groups.set(key, g)
   }
+
+  for (const d of inMonth('depenses')) {
+    add(`a:${d.article_uuid}`, lookup('articles', d.article_uuid)?.nom ?? 'Article supprimé', d.montant)
+  }
+  // Les dépenses personnelles sont regroupées par désignation (sans tenir compte de la casse).
+  for (const p of inMonth('depenses_personnelles')) {
+    const name = String(p.designation ?? '').trim() || 'Sans désignation'
+    add(`p:${name.toLowerCase()}`, name, p.montant)
+  }
+
   return [...groups.values()].sort((a, b) => b.total - a.total).slice(0, 8)
 })
 </script>

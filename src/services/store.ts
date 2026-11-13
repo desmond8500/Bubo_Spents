@@ -11,6 +11,7 @@ type State = Record<EntityKey, Row[]> & {
 
 export const state = reactive<State>({
   depenses: [],
+  depenses_personnelles: [],
   revenus: [],
   emprunts: [],
   articles: [],

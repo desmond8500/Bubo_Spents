@@ -1,6 +1,13 @@
 import { settings } from './settings'
 
-export type EntityKey = 'depenses' | 'revenus' | 'emprunts' | 'articles' | 'marques' | 'fournisseurs'
+export type EntityKey =
+  | 'depenses'
+  | 'depenses_personnelles'
+  | 'revenus'
+  | 'emprunts'
+  | 'articles'
+  | 'marques'
+  | 'fournisseurs'
 
 export interface Field {
   key: string
@@ -52,6 +59,20 @@ export const entities: EntityDef[] = [
       { key: 'date', label: 'Date', type: 'date', required: true },
     ],
     label: (r, lookup) => lookup('articles', r.article_uuid)?.nom ?? 'Article supprimé',
+    subtitle: (r) => join(r.date, Number(r.quantite) !== 1 && `x${r.quantite}`),
+    amount: (r) => Number(r.montant),
+    tone: 'danger',
+  },
+  {
+    key: 'depenses_personnelles',
+    title: 'Dépenses perso',
+    fields: [
+      { key: 'designation', label: 'Désignation', type: 'text', required: true },
+      { key: 'quantite', label: 'Quantité', type: 'number', required: true, default: 1 },
+      { key: 'montant', label: 'Montant', type: 'number', required: true },
+      { key: 'date', label: 'Date', type: 'date', required: true },
+    ],
+    label: (r) => r.designation,
     subtitle: (r) => join(r.date, Number(r.quantite) !== 1 && `x${r.quantite}`),
     amount: (r) => Number(r.montant),
     tone: 'danger',

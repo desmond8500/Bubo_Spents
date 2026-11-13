@@ -12,6 +12,12 @@
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
+      <ion-toolbar v-if="isDepense">
+        <ion-segment :value="entity" @ion-change="onSegment">
+          <ion-segment-button value="depenses"><ion-label>Articles</ion-label></ion-segment-button>
+          <ion-segment-button value="depenses_personnelles"><ion-label>Personnelles</ion-label></ion-segment-button>
+        </ion-segment>
+      </ion-toolbar>
     </ion-header>
 
     <ion-content>
@@ -116,8 +122,10 @@ import { computed, nextTick, reactive, ref } from 'vue'
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonBackButton, IonContent, IonList,
   IonItem, IonLabel, IonIcon, IonNote, IonFab, IonFabButton, IonModal, IonInput, IonTextarea,
-  IonSelect, IonSelectOption, IonItemSliding, IonItemOptions, IonItemOption, alertController,
+  IonSelect, IonSelectOption, IonItemSliding, IonItemOptions, IonItemOption, IonSegment, IonSegmentButton,
+  alertController,
 } from '@ionic/vue'
+import { useRouter } from 'vue-router'
 import { addOutline, syncOutline, cloudDoneOutline, cloudOfflineOutline, trashOutline, moonOutline } from 'ionicons/icons'
 import ImagePicker from '../components/ImagePicker.vue'
 import { entityByKey, fmt, type EntityKey, type Row } from '../services/entities'
@@ -129,6 +137,15 @@ const def = computed(() => entityByKey(props.entity))
 const rows = computed(() => visible(props.entity))
 const isCatalogue = computed(() => ['articles', 'marques', 'fournisseurs'].includes(props.entity))
 const options = (key: EntityKey) => visible(key)
+
+const router = useRouter()
+const isDepense = computed(() => props.entity === 'depenses' || props.entity === 'depenses_personnelles')
+
+/** Bascule entre les dépenses d'articles et les dépenses personnelles (deux routes sœurs dans l'onglet Dépenses). */
+function onSegment(ev: CustomEvent) {
+  const target = ev.detail.value === 'depenses_personnelles' ? '/tabs/depenses/perso' : '/tabs/depenses'
+  if (ev.detail.value !== props.entity) router.replace(target)
+}
 
 const thumb = (row: Row) => def.value.image?.(row) ?? null
 const subtitle = (row: Row) => def.value.subtitle?.(row, lookup) ?? ''
