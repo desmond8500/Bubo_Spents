@@ -20,6 +20,26 @@ function step(command, options) {
   if (code !== 0) process.exit(code)
 }
 
+/** Vérifie JDK et SDK Android avant de commencer, pour échouer tout de suite avec un message clair. */
+function preflight() {
+  const problems = []
+
+  const java = spawnSync('java -version', { shell: true, encoding: 'utf8' })
+  const major = Number(/version "(?:1\.)?(\d+)/.exec(`${java.stdout ?? ''}${java.stderr ?? ''}`)?.[1])
+  if (java.status !== 0 || !major) problems.push('Java introuvable : installez un JDK 21 (la commande java doit être dans le PATH).')
+  else if (major < 21) problems.push(`Java ${major} détecté : Capacitor 7 demande un JDK 21 ou plus récent.`)
+
+  const sdk = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT
+  if (!sdk || !existsSync(sdk)) problems.push('SDK Android introuvable : définissez ANDROID_HOME vers le dossier du SDK (voir README).')
+
+  if (problems.length) {
+    console.error(`\n${problems.map((p) => `- ${p}`).join('\n')}`)
+    process.exit(1)
+  }
+}
+
+if (!openStudio) preflight()
+
 if (!existsSync('node_modules/@capacitor/android')) step('npm install')
 
 step('npm run build:web')

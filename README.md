@@ -14,7 +14,19 @@ npm run dev
 
 ## Build Android en une commande
 
-Prérequis : JDK 21 et Android SDK (variable `ANDROID_HOME` définie).
+Android Studio n'est pas nécessaire. Il faut :
+
+- un **JDK 21** (la commande `java` dans le PATH) ;
+- le **SDK Android**, dont les [outils en ligne de commande](https://developer.android.com/studio#command-line-tools-only) suffisent,
+  avec la variable `ANDROID_HOME` qui pointe vers son dossier.
+
+```bash
+# une seule fois, avec les outils en ligne de commande installés
+sdkmanager --sdk_root="$ANDROID_HOME" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+sdkmanager --sdk_root="$ANDROID_HOME" --licenses
+```
+
+Si Gradle réclame une autre version de plateforme, installez celle qu'il indique avec `sdkmanager`.
 
 ```bash
 npm run apk       # installe si besoin, build, crée le projet Android, produit l'APK de debug
