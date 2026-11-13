@@ -1,3 +1,5 @@
+import { settings } from './settings'
+
 export type EntityKey = 'depenses' | 'revenus' | 'emprunts' | 'articles' | 'marques' | 'fournisseurs'
 
 export interface Field {
@@ -27,7 +29,10 @@ export interface EntityDef {
   image?: (row: Row) => string | null
 }
 
-export const fmt = (n: unknown) => new Intl.NumberFormat('fr-FR').format(Number(n) || 0)
+export const fmt = (n: unknown) => {
+  const s = new Intl.NumberFormat('fr-FR').format(Number(n) || 0)
+  return settings.currency.trim() ? `${s} ${settings.currency.trim()}` : s
+}
 
 const join = (...parts: Array<string | null | undefined | false>) => parts.filter(Boolean).join(' · ')
 

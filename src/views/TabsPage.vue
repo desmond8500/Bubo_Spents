@@ -3,6 +3,10 @@
     <ion-tabs>
       <ion-router-outlet />
       <ion-tab-bar slot="bottom">
+        <ion-tab-button tab="resume" href="/tabs/resume">
+          <ion-icon :icon="statsChartOutline" />
+          <ion-label>Résumé</ion-label>
+        </ion-tab-button>
         <ion-tab-button tab="depenses" href="/tabs/depenses">
           <ion-icon :icon="cartOutline" />
           <ion-label>Dépenses</ion-label>
@@ -26,5 +30,5 @@
 
 <script setup lang="ts">
 import { IonPage, IonTabs, IonRouterOutlet, IonTabBar, IonTabButton, IonIcon, IonLabel } from '@ionic/vue'
-import { cartOutline, cashOutline, swapHorizontalOutline, albumsOutline } from 'ionicons/icons'
+import { statsChartOutline, cartOutline, cashOutline, swapHorizontalOutline, albumsOutline } from 'ionicons/icons'
 </script>

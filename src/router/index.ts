@@ -10,12 +10,14 @@ const entityRoute = (path: string, entity: EntityKey): RouteRecordRaw => ({
 })
 
 const routes: RouteRecordRaw[] = [
-  { path: '/', redirect: '/tabs/depenses' },
+  { path: '/', redirect: '/tabs/resume' },
+  { path: '/settings', component: () => import('../views/SettingsPage.vue') },
   {
     path: '/tabs/',
     component: TabsPage,
     children: [
-      { path: '', redirect: '/tabs/depenses' },
+      { path: '', redirect: '/tabs/resume' },
+      { path: 'resume', component: () => import('../views/SummaryPage.vue') },
       entityRoute('depenses', 'depenses'),
       entityRoute('revenus', 'revenus'),
       entityRoute('emprunts', 'emprunts'),
