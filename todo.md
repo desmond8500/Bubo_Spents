@@ -2,7 +2,15 @@
 
 ## Design
 
-- [] améliorer l'interface
+- [x] améliorer l'interface
+- [x] créer un logo
+- [x] splash screen
+
+## Rôles et journal
+
+- [x] Rôles : admin, membre, lecteur (droits sur les données communes)
+- [x] Gestion des rôles par l'administrateur
+- [x] Journal d'activité consultable par l'administrateur
 
 ## Fonctionalités
 

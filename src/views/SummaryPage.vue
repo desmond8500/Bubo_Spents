@@ -26,6 +26,11 @@
         <div class="solde-label">Votre solde du mois</div>
         <div class="solde" :class="{ negative: solde < 0 }">{{ fmt(solde) }}</div>
 
+        <div v-if="totals.revenus > 0" class="gauge" role="img" :aria-label="`${usedPct} % des revenus dépensés`">
+          <div class="gauge-fill" :class="{ over: usedPct > 100 }" :style="{ width: Math.min(100, usedPct) + '%' }" />
+        </div>
+        <div v-if="totals.revenus > 0" class="gauge-text">{{ usedPct }} % des revenus dépensés</div>
+
         <div class="chips">
           <div class="chip">
             <span>Revenus</span>
@@ -217,6 +222,9 @@ const totals = computed(() => {
   }
 })
 
+const usedPct = computed(() =>
+  totals.value.revenus > 0 ? Math.round((totals.value.mesDepenses / totals.value.revenus) * 100) : 0,
+)
 const solde = computed(() => totals.value.revenus - totals.value.mesDepenses)
 
 /** Emprunts non remboursés, tous mois confondus. */
@@ -281,12 +289,50 @@ const byPoste = computed(() => {
 <style scoped>
 /* Le bandeau garde les mêmes couleurs en clair et en sombre : texte blanc sur indigo profond. */
 .hero {
+  position: relative;
+  overflow: hidden;
   margin: 8px 16px 16px;
   padding: 8px 16px 20px;
   border-radius: 24px;
   color: #fff;
   background: linear-gradient(135deg, #4a48b5 0%, #27256f 100%);
   box-shadow: 0 10px 24px rgba(39, 37, 111, 0.28);
+}
+/* Les deux yeux du hibou : seul ornement de l'écran, discret derrière le solde. */
+.hero::before,
+.hero::after {
+  content: '';
+  position: absolute;
+  top: 54px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid rgba(242, 169, 59, 0.28);
+  background: radial-gradient(circle, rgba(242, 169, 59, 0.5) 0 9px, transparent 10px);
+  pointer-events: none;
+}
+.hero::before { left: -22px; }
+.hero::after { right: -22px; }
+.hero > * { position: relative; }
+.gauge {
+  height: 6px;
+  margin: -6px 12% 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.16);
+  overflow: hidden;
+}
+.gauge-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: #f2a93b;
+  transition: width 0.4s ease;
+}
+.gauge-fill.over { background: #ffb4ae; }
+.gauge-text {
+  margin-bottom: 14px;
+  text-align: center;
+  font-size: 12px;
+  opacity: 0.75;
 }
 .month {
   display: flex;
@@ -303,8 +349,9 @@ const byPoste = computed(() => {
 }
 .solde {
   text-align: center;
-  font-size: 34px;
+  font-size: 38px;
   font-weight: 800;
+  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   margin: 4px 0 18px;
 }
