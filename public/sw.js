@@ -4,9 +4,10 @@
  * - Fichiers statiques de l'application : cache d'abord, mis à jour en arrière-plan.
  * - Les appels à l'API (autre domaine) ne sont jamais interceptés ni mis en cache : les données restent
  *   dans le stockage local de l'application et sont synchronisées par l'application elle-même.
- * Pour forcer une mise à jour de tous les appareils, changez VERSION.
+ * VERSION est remplacée à chaque build par l'identifiant du commit (voir vite.config.ts) : chaque déploiement
+ * installe donc un nouveau service worker, vide les anciens caches et l'application se recharge d'elle-même.
  */
-const VERSION = 'bubo-spents-v2'
+const VERSION = 'bubo-spents-dev'
 const SHELL = [
   '/',
   '/index.html',
@@ -57,7 +58,9 @@ self.addEventListener('fetch', (event) => {
     caches.match(request).then((cached) => {
       const refresh = fetch(request)
         .then((response) => {
-          if (response.ok && response.type === 'basic') {
+          // Un fichier disparu après un déploiement est remplacé par index.html (règle _redirects) : ne pas le garder.
+          const isHtml = (response.headers.get('content-type') || '').includes('text/html')
+          if (response.ok && response.type === 'basic' && !isHtml) {
             const copy = response.clone()
             caches.open(VERSION).then((cache) => cache.put(request, copy))
           }

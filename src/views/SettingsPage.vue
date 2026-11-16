@@ -106,6 +106,8 @@
           <ion-label color="danger">Effacer les données locales</ion-label>
         </ion-item>
       </ion-list>
+
+      <p class="version">Version {{ appVersion }} · {{ buildLabel }}</p>
     </ion-content>
   </ion-page>
 </template>
@@ -124,8 +126,11 @@ import { roleLabel, session } from '../services/session'
 import { canCreate, isAdmin } from '../services/permissions'
 import { DEFAULT_API_URL, settings } from '../services/settings'
 import { clearLocal, pendingCount, state, sync } from '../services/store'
+import { appBuildDate, appVersion } from '../services/updates'
 
 const router = useRouter()
+/** Permet de vérifier que l'appareil a bien reçu le dernier déploiement. */
+const buildLabel = new Date(appBuildDate).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })
 const testing = ref(false)
 
 async function confirmLogout() {
@@ -187,3 +192,12 @@ async function confirmClear() {
   await alert.present()
 }
 </script>
+
+<style scoped>
+.version {
+  margin: 8px 0 24px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ion-color-medium);
+}
+</style>

@@ -5,6 +5,7 @@ import App from './App.vue'
 import router from './router'
 import { init, startAutoSync } from './services/store'
 import { loadSettings } from './services/settings'
+import { announceUpdate, reloadOnStaleChunks, setupAutoUpdate } from './services/updates'
 
 import '@ionic/vue/css/core.css'
 import '@ionic/vue/css/normalize.css'
@@ -18,16 +19,17 @@ import './theme/variables.css'
 
 const app = createApp(App).use(IonicVue).use(router)
 
+const isWebBuild = import.meta.env.PROD && !Capacitor.isNativePlatform()
+
 Promise.all([router.isReady(), loadSettings(), init()]).then(() => {
   app.mount('#app')
   startAutoSync()
+  if (isWebBuild) announceUpdate()
 })
 
-// PWA : service worker pour l'ouverture hors ligne (version web uniquement, pas dans l'application Android).
-if (import.meta.env.PROD && !Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {
-      // sans service worker, l'application fonctionne normalement mais ne s'ouvre pas hors ligne
-    })
-  })
+// PWA (version web uniquement, pas dans l'application Android) : ouverture hors ligne et mise à jour automatique
+// à chaque déploiement.
+if (isWebBuild) {
+  setupAutoUpdate()
+  reloadOnStaleChunks()
 }
