@@ -23,8 +23,8 @@
           </ion-button>
         </div>
 
-        <div class="solde-label">Votre solde du mois</div>
-        <div class="solde" :class="{ negative: solde < 0 }">{{ fmt(solde) }}</div>
+        <div class="solde-label">{{ solde < 0 ? 'Votre déficit du mois' : 'Votre restant du mois' }}</div>
+        <div class="solde" :class="{ negative: solde < 0 }">{{ fmt(Math.abs(solde)) }}</div>
 
         <div v-if="totals.revenus > 0" class="gauge" role="img" :aria-label="`${usedPct} % des revenus dépensés`">
           <div class="gauge-fill" :class="{ over: usedPct > 100 }" :style="{ width: Math.min(100, usedPct) + '%' }" />
@@ -50,24 +50,52 @@
       <ion-card class="budget">
         <ion-card-header>
           <ion-card-subtitle>Budget commun · visible par tous</ion-card-subtitle>
-          <ion-card-title v-if="budget.active" :color="budget.reste < 0 ? 'danger' : 'success'">
-            {{ fmt(budget.reste) }}
-            <small>restant</small>
+          <ion-card-title v-if="budget.active" :color="enDeficit ? 'danger' : 'success'">
+            <small>{{ enDeficit ? 'Déficit' : 'Restant' }}</small>
+            {{ fmt(Math.abs(budget.reste)) }}
           </ion-card-title>
           <ion-card-title v-else>Aucun budget</ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <template v-if="budget.active">
+            <!-- Résumé du mois : ce qui a été crédité, ce qui a été dépensé, et ce qui reste (ou manque). -->
+            <div class="budget-chips">
+              <div class="bchip">
+                <span>Crédit</span>
+                <strong class="in">{{ fmt(budget.disponible) }}</strong>
+              </div>
+              <div class="bchip">
+                <span>Dépenses</span>
+                <strong class="out">{{ fmt(budget.depenses) }}</strong>
+              </div>
+              <div class="bchip" :class="enDeficit ? 'deficit' : 'reste'">
+                <span>{{ enDeficit ? 'Déficit' : 'Restant' }}</span>
+                <strong>{{ fmt(Math.abs(budget.reste)) }}</strong>
+              </div>
+            </div>
+
             <ion-progress-bar
               :value="budget.disponible > 0 ? Math.min(1, budget.depenses / budget.disponible) : 1"
-              :color="budget.reste < 0 ? 'danger' : 'primary'"
+              :color="enDeficit ? 'danger' : 'primary'"
             />
-            <div class="budget-lines">
-              <div><span>Report du mois précédent</span><strong>{{ fmt(budget.report) }}</strong></div>
-              <div><span>Crédits du mois</span><strong>{{ fmt(budget.credits) }}</strong></div>
-              <div><span>Dépenses générales</span><strong>{{ fmt(budget.depenses) }}</strong></div>
+            <div class="gauge-caption">
+              {{ budget.disponible > 0 ? `${budgetPct} % du crédit dépensé` : 'Aucun crédit disponible ce mois-ci' }}
             </div>
-            <p class="hint">Le reste sera reporté sur le budget du mois suivant.</p>
+
+            <div class="budget-lines">
+              <div>
+                <span>{{ budget.report < 0 ? 'Déficit reporté du mois précédent' : 'Report du mois précédent' }}</span>
+                <strong :class="{ neg: budget.report < 0 }">{{ fmt(budget.report) }}</strong>
+              </div>
+              <div><span>Crédits ajoutés ce mois-ci</span><strong>{{ fmt(budget.credits) }}</strong></div>
+            </div>
+            <p class="hint">
+              {{
+                enDeficit
+                  ? 'Les dépenses dépassent le crédit : le déficit sera retiré du budget du mois suivant.'
+                  : 'Le reste sera reporté sur le budget du mois suivant.'
+              }}
+            </p>
           </template>
           <p v-else-if="budget.start" class="hint">Le budget commence en {{ startLabel }}.</p>
           <p v-else class="hint">Définissez le solde de départ : il servira de budget mensuel pour tous.</p>
@@ -235,6 +263,10 @@ const aRembourser = computed(() => {
 
 /** Budget commun du mois affiché (report des mois précédents + crédits − dépenses générales). */
 const budget = computed(() => budgetFor(month.value))
+const enDeficit = computed(() => budget.value.reste < 0)
+const budgetPct = computed(() =>
+  budget.value.disponible > 0 ? Math.round((budget.value.depenses / budget.value.disponible) * 100) : 0,
+)
 
 const startLabel = computed(() => {
   if (!budget.value.start) return ''
@@ -387,10 +419,52 @@ const byPoste = computed(() => {
 .chip .loan {
   color: #ffd27d;
 }
-.budget small {
+.budget ion-card-title small {
+  display: block;
   font-size: 13px;
   font-weight: 400;
   color: var(--ion-color-medium);
+}
+.budget ion-card-title {
+  font-variant-numeric: tabular-nums;
+}
+/* Même présentation que le bandeau revenus / dépenses, sur fond clair. */
+.budget-chips {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.bchip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 10px;
+  border-radius: 14px;
+  font-size: 12px;
+  color: var(--ion-color-medium);
+  background: rgba(var(--ion-color-primary-rgb), 0.08);
+}
+.bchip strong {
+  font-size: 13px;
+  color: var(--ion-text-color);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.bchip .in { color: var(--ion-color-success); }
+.bchip .out { color: var(--ion-color-danger); }
+.bchip.reste { background: rgba(var(--ion-color-success-rgb), 0.12); }
+.bchip.reste strong { color: var(--ion-color-success); }
+.bchip.deficit { background: rgba(var(--ion-color-danger-rgb), 0.12); }
+.bchip.deficit strong { color: var(--ion-color-danger); }
+.gauge-caption {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--ion-color-medium);
+}
+.budget-lines .neg {
+  color: var(--ion-color-danger);
 }
 .budget-lines {
   margin-top: 12px;
