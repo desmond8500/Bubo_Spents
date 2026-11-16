@@ -44,10 +44,17 @@ export async function importCsv(type: ImportType, buffer: ArrayBuffer): Promise<
     throw new Error(`Trop de lignes (${records.length}). Limite : ${MAX_IMPORT_ROWS} par import.`)
   }
 
+  const parNom = (key: 'marques' | 'fournisseurs') =>
+    visible(key).map((r) => ({ uuid: r.uuid, nom: String(r.nom ?? '') }))
+
   const plan = planImport(type, records, {
-    marques: visible('marques') as Array<{ uuid: string; nom: string }>,
-    fournisseurs: visible('fournisseurs') as Array<{ uuid: string; nom: string }>,
-    articles: visible('articles') as Array<{ nom: string; marque_uuid?: string | null; fournisseur_uuid?: string | null }>,
+    marques: parNom('marques'),
+    fournisseurs: parNom('fournisseurs'),
+    articles: visible('articles').map((r) => ({
+      nom: String(r.nom ?? ''),
+      marque_uuid: (r.marque_uuid as string | null | undefined) ?? null,
+      fournisseur_uuid: (r.fournisseur_uuid as string | null | undefined) ?? null,
+    })),
   })
 
   const summary: ImportSummary = {

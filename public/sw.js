@@ -6,7 +6,7 @@
  *   dans le stockage local de l'application et sont synchronisées par l'application elle-même.
  * Pour forcer une mise à jour de tous les appareils, changez VERSION.
  */
-const VERSION = 'bubo-spents-v1'
+const VERSION = 'bubo-spents-v2'
 const SHELL = [
   '/',
   '/index.html',
@@ -41,8 +41,11 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone()
-          caches.open(VERSION).then((cache) => cache.put('/index.html', copy))
+          // Ne garde en cache qu'une vraie page : une page d'erreur (404, 500...) remplacerait l'application hors ligne.
+          if (response.ok && response.type === 'basic') {
+            const copy = response.clone()
+            caches.open(VERSION).then((cache) => cache.put('/index.html', copy))
+          }
           return response
         })
         .catch(() => caches.match('/index.html').then((cached) => cached || caches.match('/'))),

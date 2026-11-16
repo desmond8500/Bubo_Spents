@@ -1,0 +1,4 @@
+# Application monopage (Vue Router en mode history) : toute adresse inconnue renvoie index.html,
+# pour qu'actualiser une page comme /depenses ne tombe pas sur la page 404 de Netlify.
+# Les fichiers existants (JS, CSS, images, sw.js...) sont servis normalement avant cette règle.
+/*    /index.html    200
