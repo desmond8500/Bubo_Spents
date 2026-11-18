@@ -8,7 +8,7 @@
         <ion-title>Statistiques</ion-title>
       </ion-toolbar>
       <ion-toolbar>
-        <ion-segment :value="scope" @ion-change="scope = $event.detail.value">
+        <ion-segment :value="scope" @ion-change="onScope">
           <ion-segment-button value="depenses"><ion-label>Générales</ion-label></ion-segment-button>
           <ion-segment-button value="depenses_personnelles"><ion-label>Personnelles</ion-label></ion-segment-button>
         </ion-segment>
@@ -112,6 +112,9 @@ const mode = ref<StatMode>('month')
 const today = new Date().toISOString().slice(0, 10)
 const period = ref(periodOf(today, 'month'))
 
+function onScope(ev: CustomEvent) {
+  scope.value = ev.detail.value === 'depenses_personnelles' ? 'depenses_personnelles' : 'depenses'
+}
 function onMode(ev: CustomEvent) {
   mode.value = ev.detail.value as StatMode
   period.value = periodOf(today, mode.value)
