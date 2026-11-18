@@ -19,7 +19,7 @@
       <ion-note class="columns">
         Fichier CSV (séparateur « ; » ou « , »), avec une ligne d'en-tête. Colonnes :<br />
         <strong>{{ IMPORT_COLUMNS[type] }}</strong>
-        <template v-if="type === 'articles'"><br />Les marques et fournisseurs inconnus sont créés automatiquement.</template>
+        <template v-if="type === 'articles'"><br />Les marques, fournisseurs et catégories inconnus sont créés automatiquement.</template>
         <br />Les lignes déjà présentes sont ignorées : vous pouvez réimporter un fichier sans créer de doublons.
       </ion-note>
 
@@ -48,8 +48,8 @@
           </ion-card-subtitle>
         </ion-card-header>
         <ion-card-content>
-          <p v-if="result.createdMarques || result.createdFournisseurs">
-            Créés au passage : {{ result.createdMarques }} marque(s), {{ result.createdFournisseurs }} fournisseur(s).
+          <p v-if="result.createdMarques || result.createdFournisseurs || result.createdCategories">
+            Créés au passage : {{ result.createdMarques }} marque(s), {{ result.createdFournisseurs }} fournisseur(s), {{ result.createdCategories }} catégorie(s).
           </p>
           <ul v-if="result.errors.length" class="problems">
             <li v-for="e in result.errors.slice(0, 10)" :key="e">{{ e }}</li>

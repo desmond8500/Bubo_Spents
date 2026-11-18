@@ -85,6 +85,20 @@ export const MODES_PAIEMENT: SelectOption[] = [
 
 export const modeLabel = (value: unknown) => MODES_PAIEMENT.find((m) => m.value === value)?.label ?? ''
 
+export const UNITES: SelectOption[] = [
+  { value: 'piece', label: 'Pièce' },
+  { value: 'kg', label: 'Kilogramme (kg)' },
+  { value: 'g', label: 'Gramme (g)' },
+  { value: 'l', label: 'Litre (l)' },
+  { value: 'ml', label: 'Millilitre (ml)' },
+  { value: 'm', label: 'Mètre (m)' },
+  { value: 'paquet', label: 'Paquet' },
+  { value: 'carton', label: 'Carton' },
+  { value: 'sac', label: 'Sac' },
+  { value: 'boite', label: 'Boîte' },
+]
+const uniteLabel = (value: unknown) => UNITES.find((u) => u.value === value)?.label.replace(/ \(.*\)$/, '') ?? ''
+
 const modeField: Field = { key: 'mode_paiement', label: 'Mode de paiement', type: 'select', options: MODES_PAIEMENT }
 
 export const entities: EntityDef[] = [
@@ -214,15 +228,26 @@ export const entities: EntityDef[] = [
     duplicable: true,
     fields: [
       { key: 'nom', label: 'Nom', type: 'text', required: true },
+      { key: 'reference', label: 'Référence', type: 'text' },
       { key: 'prix', label: 'Prix', type: 'number', required: true },
+      { key: 'categorie_uuid', label: 'Catégorie', type: 'ref', ref: 'categories', quickAdd: true },
+      { key: 'unite', label: 'Unité', type: 'select', options: UNITES },
+      { key: 'poids', label: 'Poids', type: 'number' },
       { key: 'description', label: 'Description', type: 'textarea' },
+      { key: 'caracteristiques', label: 'Caractéristiques', type: 'textarea' },
       { key: 'images', label: 'Images', type: 'images' },
       { key: 'marque_uuid', label: 'Marque', type: 'ref', ref: 'marques' },
       { key: 'fournisseur_uuid', label: 'Fournisseur', type: 'ref', ref: 'fournisseurs' },
     ],
     label: (r) => r.nom,
     subtitle: (r, lookup) =>
-      join(lookup('marques', r.marque_uuid)?.nom, lookup('fournisseurs', r.fournisseur_uuid)?.nom),
+      join(
+        r.reference,
+        lookup('categories', r.categorie_uuid)?.nom,
+        lookup('marques', r.marque_uuid)?.nom,
+        lookup('fournisseurs', r.fournisseur_uuid)?.nom,
+        uniteLabel(r.unite),
+      ),
     image: (r) => r.images?.[0] ?? null,
     amount: (r) => Number(r.prix),
     tone: 'medium',

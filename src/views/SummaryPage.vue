@@ -4,7 +4,21 @@
       <ion-toolbar>
         <ion-title>Résumé</ion-title>
         <ion-buttons slot="end">
-          <ion-button router-link="/settings">
+          <!-- Mention requise par l'hébergeur : sur le web uniquement, avec de la marge avant le bouton Paramètres. -->
+          <a
+            v-if="isWeb"
+            class="powered"
+            href="https://www.netlify.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >Powered by Netlify</a>
+          <ion-button router-link="/tabs/resume/stats" aria-label="Statistiques">
+            <ion-icon slot="icon-only" :icon="barChartOutline" />
+          </ion-button>
+          <ion-button :disabled="state.syncing" aria-label="Synchroniser" @click="sync">
+            <ion-icon slot="icon-only" :icon="syncOutline" />
+          </ion-button>
+          <ion-button router-link="/settings" aria-label="Paramètres">
             <ion-icon slot="icon-only" :icon="settingsOutline" />
           </ion-button>
         </ion-buttons>
@@ -203,14 +217,17 @@ import {
   IonCardTitle, IonCardContent,
 } from '@ionic/vue'
 import {
-  addCircleOutline, chevronBack, chevronForward, moonOutline, peopleOutline, personOutline, settingsOutline,
+  addCircleOutline, barChartOutline, chevronBack, chevronForward, moonOutline, peopleOutline, personOutline, settingsOutline, syncOutline,
 } from 'ionicons/icons'
 import { fmt, type EntityKey, type Row } from '../services/entities'
 import EntityForm from '../components/EntityForm.vue'
 import { budgetFor } from '../services/budget'
 import { canCreate, isMine } from '../services/permissions'
 import { session } from '../services/session'
-import { lookup, visible } from '../services/store'
+import { lookup, state, sync, visible } from '../services/store'
+import { Capacitor } from '@capacitor/core'
+
+const isWeb = !Capacitor.isNativePlatform()
 
 const keyOf = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 const currentKey = keyOf(new Date())
@@ -319,6 +336,17 @@ const byPoste = computed(() => {
 </script>
 
 <style scoped>
+.powered {
+  margin-inline-end: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--ion-color-medium);
+  border: 1px solid var(--ion-border-color);
+}
 /* Le bandeau garde les mêmes couleurs en clair et en sombre : texte blanc sur indigo profond. */
 .hero {
   position: relative;

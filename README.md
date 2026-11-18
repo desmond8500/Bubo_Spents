@@ -75,6 +75,14 @@ Paramètres > Importer. Fichier CSV avec ligne d'en-tête, séparateur `;`, `,` 
 | Type | Colonnes |
 | --- | --- |
 | Marques, fournisseurs | `nom`, `description`, `logo` (adresse http/https) |
-| Articles | `nom`, `prix`, `description`, `marque`, `fournisseur`, `images` (adresses http/https séparées par `\|`, 5 maximum) |
+| Articles | `nom`, `prix`, `reference`, `unite` (piece, kg, g, l, ml, m, paquet, carton, sac, boite), `poids`, `description`, `caracteristiques`, `categorie`, `marque`, `fournisseur`, `images` (adresses http/https séparées par `\|`, 5 maximum) |
 
-Les lignes déjà présentes (même nom, ou même nom + marque + fournisseur pour un article) sont ignorées : réimporter un fichier ne crée pas de doublons. Les marques et fournisseurs inconnus cités par des articles sont créés. Les lignes invalides sont refusées avec leur numéro de ligne. L'export correspondant est fourni par l'API serveur (`/api/export/{marques|fournisseurs|articles}?format=csv|json`).
+Les lignes déjà présentes (même nom, ou même nom + marque + fournisseur pour un article) sont ignorées : réimporter un fichier ne crée pas de doublons. Les marques, fournisseurs et catégories inconnus cités par des articles sont créés. Les lignes invalides sont refusées avec leur numéro de ligne. L'export correspondant est fourni par l'API serveur (`/api/export/{marques|fournisseurs|articles}?format=csv|json`).
+
+## Statistiques
+
+Résumé > icône graphique : total, nombre, moyenne, répartition par catégorie et plus gros postes, par mois ou par année (barres mois par mois), pour les dépenses générales (tous) ou personnelles (les vôtres).
+
+## Dépense personnelle depuis un article
+
+À la création, « Choisir un article existant » préremplit la désignation, la catégorie de l'article et le montant (prix × quantité).

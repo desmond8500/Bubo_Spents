@@ -11,6 +11,7 @@ export interface ImportSummary {
   skipped: number
   createdMarques: number
   createdFournisseurs: number
+  createdCategories: number
   errors: string[]
   warnings: string[]
 }
@@ -18,7 +19,8 @@ export interface ImportSummary {
 export const IMPORT_COLUMNS: Record<ImportType, string> = {
   marques: 'nom ; description ; logo (adresse http)',
   fournisseurs: 'nom ; description ; logo (adresse http)',
-  articles: 'nom ; prix ; description ; marque ; fournisseur ; images (adresses http séparées par |)',
+  articles:
+    'nom ; prix ; reference ; unite ; poids ; description ; caracteristiques ; categorie ; marque ; fournisseur ; images (adresses http séparées par |)',
 }
 
 export const MAX_FILE_BYTES = 2 * 1024 * 1024
@@ -44,12 +46,13 @@ export async function importCsv(type: ImportType, buffer: ArrayBuffer): Promise<
     throw new Error(`Trop de lignes (${records.length}). Limite : ${MAX_IMPORT_ROWS} par import.`)
   }
 
-  const parNom = (key: 'marques' | 'fournisseurs') =>
+  const parNom = (key: 'marques' | 'fournisseurs' | 'categories') =>
     visible(key).map((r) => ({ uuid: r.uuid, nom: String(r.nom ?? '') }))
 
   const plan = planImport(type, records, {
     marques: parNom('marques'),
     fournisseurs: parNom('fournisseurs'),
+    categories: parNom('categories'),
     articles: visible('articles').map((r) => ({
       nom: String(r.nom ?? ''),
       marque_uuid: (r.marque_uuid as string | null | undefined) ?? null,
@@ -63,6 +66,7 @@ export async function importCsv(type: ImportType, buffer: ArrayBuffer): Promise<
     skipped: plan.skipped,
     createdMarques: 0,
     createdFournisseurs: 0,
+    createdCategories: 0,
     errors: plan.errors,
     warnings: plan.warnings,
   }
@@ -77,15 +81,22 @@ export async function importCsv(type: ImportType, buffer: ArrayBuffer): Promise<
       summary.createdFournisseurs = plan.newFournisseurs.length
     }
 
-    const uuidParNom = (key: 'marques' | 'fournisseurs') =>
+    if (plan.newCategories.length) {
+      await addMany('categories', plan.newCategories.map((nom) => ({ nom, description: null })))
+      summary.createdCategories = plan.newCategories.length
+    }
+
+    const uuidParNom = (key: 'marques' | 'fournisseurs' | 'categories') =>
       new Map(visible(key).map((r) => [normalizeText(String(r.nom)), r.uuid]))
     const marques = uuidParNom('marques')
     const fournisseurs = uuidParNom('fournisseurs')
+    const categories = uuidParNom('categories')
 
     await addMany(
       'articles',
-      plan.rows.map(({ marque, fournisseur, ...article }) => ({
+      plan.rows.map(({ marque, fournisseur, categorie, ...article }) => ({
         ...article,
+        categorie_uuid: categorie ? (categories.get(normalizeText(categorie)) ?? null) : null,
         marque_uuid: marque ? (marques.get(normalizeText(marque)) ?? null) : null,
         fournisseur_uuid: fournisseur ? (fournisseurs.get(normalizeText(fournisseur)) ?? null) : null,
       })),

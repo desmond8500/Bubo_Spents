@@ -10,6 +10,20 @@
     </ion-header>
 
     <ion-content class="ion-padding">
+      <!-- Dépense personnelle : repartir d'un article du catalogue (désignation, catégorie et prix). -->
+      <ion-item v-if="entity === 'depenses_personnelles' && !row">
+        <ion-select
+          v-model="pick"
+          label="Choisir un article existant"
+          label-placement="stacked"
+          interface="popover"
+          placeholder="Facultatif"
+        >
+          <ion-select-option value="">Aucun, saisir à la main</ion-select-option>
+          <ion-select-option v-for="a in visible('articles')" :key="a.uuid" :value="a.uuid">{{ a.nom }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+
       <template v-for="f in visibleFields" :key="f.key">
         <image-picker
           v-if="f.type === 'image' || f.type === 'images'"
@@ -79,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, reactive, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import {
   IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonItem, IonIcon, IonInput,
   IonTextarea, IonSelect, IonSelectOption, IonToggle,
@@ -129,6 +143,8 @@ function initial(f: Field) {
 
 // Pour une dépense : dernier article et dernière quantité pris en compte dans le calcul du montant.
 const seen = { article: '', quantite: '' }
+/** Article du catalogue choisi pour préremplir une dépense personnelle (non enregistré). */
+const pick = ref('')
 
 function init() {
   for (const k of Object.keys(form)) delete form[k]
@@ -136,9 +152,13 @@ function init() {
     const v = props.row?.[f.key]
     form[f.key] = props.row ? (v ?? blank(f)) : initial(f)
   }
+  pick.value = ''
   seen.article = String(form.article_uuid ?? '')
   seen.quantite = String(form.quantite ?? '')
 }
+
+/** Article qui pilote le prérempli : celui de la dépense générale, ou celui choisi pour une dépense perso. */
+const articleChoisi = () => (props.entity === 'depenses_personnelles' ? pick.value : String(form.article_uuid ?? ''))
 
 watch(() => props.isOpen, (open) => open && init(), { immediate: true })
 
@@ -146,24 +166,32 @@ const visibleFields = computed(() => def.value.fields.filter((f) => !f.showIf ||
 const valid = computed(() => visibleFields.value.every((f) => !f.required || filled(form[f.key])))
 
 /**
- * Dépense : le montant se recalcule (prix × quantité) quand l'utilisateur change l'article ou la quantité.
+ * Dépense : choisir un article (ou changer la quantité) recalcule le montant (prix × quantité) ;
+ * un nouvel article préremplit aussi la catégorie, et la désignation d'une dépense perso.
  * Les valeurs d'ouverture sont mémorisées pour ne pas écraser le montant d'une dépense existante.
  */
 watch(
-  () => [form.article_uuid, form.quantite],
+  () => [form.article_uuid, pick.value, form.quantite],
   async () => {
-    if (props.entity !== 'depenses') return
-    const article = String(form.article_uuid ?? '')
+    if (props.entity !== 'depenses' && props.entity !== 'depenses_personnelles') return
+    const article = articleChoisi()
     const quantite = String(form.quantite ?? '')
     if (article === seen.article && quantite === seen.quantite) return
 
+    const articleChange = article !== seen.article
     seen.article = article
     seen.quantite = quantite
     await nextTick()
 
     const produit = lookup('articles', article)
+    if (!produit) return
+
+    if (articleChange) {
+      if (produit.categorie_uuid) form.categorie_uuid = produit.categorie_uuid
+      if (props.entity === 'depenses_personnelles') form.designation = produit.nom
+    }
     const q = toNumber(quantite)
-    if (produit && q > 0) form.montant = Math.round(Number(produit.prix) * q * 100) / 100
+    if (q > 0) form.montant = Math.round(Number(produit.prix) * q * 100) / 100
   },
 )
 
@@ -182,7 +210,7 @@ async function save() {
   for (const f of def.value.fields) {
     const v = form[f.key]
     if (f.showIf && !f.showIf(form)) data[f.key] = f.type === 'toggle' ? false : null
-    else if (f.type === 'number') data[f.key] = toNumber(v)
+    else if (f.type === 'number') data[f.key] = !f.required && !filled(v) ? null : toNumber(v)
     else if (f.type === 'toggle') data[f.key] = !!v
     else if (f.type === 'images') data[f.key] = v ?? []
     else data[f.key] = v === '' ? null : v

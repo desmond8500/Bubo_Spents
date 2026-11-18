@@ -5,6 +5,7 @@ export type ImportType = 'marques' | 'fournisseurs' | 'articles'
 export interface ExistingData {
   marques: Array<{ uuid: string; nom: string }>
   fournisseurs: Array<{ uuid: string; nom: string }>
+  categories?: Array<{ uuid: string; nom: string }>
   articles: Array<{ nom: string; marque_uuid?: string | null; fournisseur_uuid?: string | null }>
 }
 
@@ -16,6 +17,7 @@ export interface ImportPlan {
   /** Marques et fournisseurs cités par des articles mais inconnus : ils seront créés. */
   newMarques: string[]
   newFournisseurs: string[]
+  newCategories: string[]
   /** Lignes ignorées car déjà présentes (ou répétées dans le fichier). */
   skipped: number
   /** Lignes refusées, avec la raison. */
@@ -26,6 +28,8 @@ export interface ImportPlan {
 
 export const MAX_IMPORT_ROWS = 2000
 
+const UNITES = ['piece', 'kg', 'g', 'l', 'ml', 'm', 'paquet', 'carton', 'sac', 'boite']
+
 /** Noms de colonnes acceptés (comparés sans accents ni casse). */
 const COLUMNS = {
   nom: ['nom', 'name'],
@@ -34,6 +38,11 @@ const COLUMNS = {
   prix: ['prix', 'price'],
   marque: ['marque', 'brand'],
   fournisseur: ['fournisseur', 'supplier'],
+  categorie: ['categorie', 'category'],
+  reference: ['reference', 'ref'],
+  unite: ['unite', 'unit'],
+  poids: ['poids', 'weight'],
+  caracteristiques: ['caracteristiques', 'characteristics'],
   images: ['images', 'image'],
 }
 
@@ -57,7 +66,7 @@ export function parsePrice(raw: string): number | null {
 }
 
 export function planImport(type: ImportType, records: CsvRecord[], existing: ExistingData): ImportPlan {
-  const plan: ImportPlan = { type, rows: [], newMarques: [], newFournisseurs: [], skipped: 0, errors: [], warnings: [] }
+  const plan: ImportPlan = { type, rows: [], newMarques: [], newFournisseurs: [], newCategories: [], skipped: 0, errors: [], warnings: [] }
 
   const nomMarque = new Map(existing.marques.map((m) => [m.uuid, m.nom]))
   const nomFournisseur = new Map(existing.fournisseurs.map((f) => [f.uuid, f.nom]))
@@ -65,6 +74,8 @@ export function planImport(type: ImportType, records: CsvRecord[], existing: Exi
   const fournisseursConnus = new Set(existing.fournisseurs.map((f) => normalizeText(f.nom)))
   const nouvellesMarques = new Set<string>()
   const nouveauxFournisseurs = new Set<string>()
+  const categoriesConnues = new Set((existing.categories ?? []).map((c) => normalizeText(c.nom)))
+  const nouvellesCategories = new Set<string>()
 
   // Clés de détection des doublons : le nom pour une marque ou un fournisseur ; nom + marque + fournisseur pour un article.
   const cleArticle = (nom: string, marque: string, fournisseur: string) =>
@@ -97,6 +108,23 @@ export function planImport(type: ImportType, records: CsvRecord[], existing: Exi
       if (prix === null) {
         plan.errors.push(`Ligne ${line} : prix ${prixBrut ? `« ${prixBrut} » invalide` : 'manquant'}`)
         continue
+      }
+
+      const poidsBrut = pick(values, COLUMNS.poids)
+      const poids = poidsBrut ? parsePrice(poidsBrut) : null
+      if (poidsBrut && poids === null) {
+        plan.errors.push(`Ligne ${line} : poids « ${poidsBrut} » invalide`)
+        continue
+      }
+
+      const uniteBrute = normalizeText(pick(values, COLUMNS.unite))
+      const unite = UNITES.includes(uniteBrute) ? uniteBrute : null
+      if (uniteBrute && !unite) plan.warnings.push(`Ligne ${line} : unité « ${uniteBrute} » ignorée`)
+
+      const categorie = pick(values, COLUMNS.categorie)
+      if (categorie && !categoriesConnues.has(normalizeText(categorie)) && !nouvellesCategories.has(normalizeText(categorie))) {
+        nouvellesCategories.add(normalizeText(categorie))
+        plan.newCategories.push(categorie)
       }
 
       const marque = pick(values, COLUMNS.marque)
@@ -135,6 +163,11 @@ export function planImport(type: ImportType, records: CsvRecord[], existing: Exi
         prix,
         description: pick(values, COLUMNS.description) || null,
         images: images.slice(0, 5),
+        reference: pick(values, COLUMNS.reference) || null,
+        unite,
+        poids,
+        caracteristiques: pick(values, COLUMNS.caracteristiques) || null,
+        categorie,
         marque,
         fournisseur,
       })

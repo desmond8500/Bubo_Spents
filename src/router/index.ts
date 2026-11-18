@@ -24,6 +24,7 @@ const routes: RouteRecordRaw[] = [
       { path: '', redirect: '/tabs/resume' },
       { path: 'resume', component: () => import('../views/SummaryPage.vue') },
       entityRoute('resume/budget', 'budgets'),
+      { path: 'resume/stats', component: () => import('../views/StatsPage.vue') },
       entityRoute('depenses', 'depenses'),
       entityRoute('depenses/perso', 'depenses_personnelles'),
       entityRoute('revenus', 'revenus'),
