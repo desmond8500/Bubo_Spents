@@ -1,43 +1,25 @@
 # [Todo](readme.md)
 
-## Design
-
-- [x] améliorer l'interface
-- [x] créer un logo
-- [x] splash screen
-
-## Rôles et journal
-
-- [x] Rôles : admin, membre, lecteur (droits sur les données communes)
-- [x] Gestion des rôles par l'administrateur
-- [x] Journal d'activité consultable par l'administrateur
-
 ## Fonctionalités
 
-- [] Stats par mois des dépenses, personelles et générales
-- [] stats anuelles
+- [ ] Stats par mois des dépenses, personelles et générales
+- [ ] stats anuelles
 
-## Prets
+## Dépenses personnelles
 
-- [x] gérer le rembousement de pret
-
-## Importation
-
-- [x] Gérer l'importation 
-  - des marques
-  - des articles
-  - des fournisseurs
+- [ ] nous donner l'option de choisir un article existant et de remplir la categorie, le prix et la designation.
 
 ## API
 
 Faire des APIs pour télécharger :
 
-- des marques
-- des articles
-- des fournisseurs
+-  [ ] des marques
+-  [ ] des articles
+-  [ ] des fournisseurs
 
 ## Articles
 
+- [] pouvoir lier les categories aux articles
 - [] Ajouter un champ référence
 - [] Ajouter des caractériques
   - unité
